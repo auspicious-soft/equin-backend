@@ -63,7 +63,7 @@ app.get("/", (_, res: any) => {
 // app.use("/api/admin",checkValidAdminRole,checkAuth, admin);
 // app.use("/api/user",checkAuth, user);
 
-//adminAuth routes
+//adminAuth routes 
 // app.post("/api/login", login);
 // app.post("/api/verify-otp", verifyOtpPasswordReset);
 // app.post("/api/forgot-password", forgotPassword);
