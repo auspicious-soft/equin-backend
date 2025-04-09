@@ -1,0 +1,236 @@
+{
+    "questions": [
+      {
+        "text": "What is your main goal with intermittent fasting?",
+        "subtitle": "Choose the reason that motivates you the most!",
+        "order": 1,
+        "options": [
+          { "text": "Healthier lifestyle", "value": 1 },
+          { "text": "Weight loss", "value": 2 },
+          { "text": "Feeling more energetic", "value": 3 }
+        ]
+      },
+      {
+        "text": "How experienced are you with intermittent fasting?",
+        "subtitle": "No worries if you're new! We'll guide you at every step.",
+        "order": 2,
+        "options": [
+          { "text": "Beginner", "value": 4 },
+          { "text": "Intermediate", "value": 5 },
+          { "text": "Advanced", "value": 6}
+        ]
+      },
+      {
+        "text": "What do you find most challenging about fasting?",
+        "subtitle": "This helps us understand where you might need extra support.",
+        "order": 3,
+        "options": [
+          { "text": "Feeling hungry", "value": 7 },
+          { "text": "Low energy", "value": 8 },
+          { "text": "Lack of motivation", "value": 9 },
+          { "text": "Fitting in with social events", "value": 10 },
+          { "text": "Sleep issues", "value": 11 }
+        ]
+      },
+      {
+        "text": "Let’s complete your profile",
+        "subtitle": "Please enter your details so we can tailor you plan perfectly to achieve your goals.",
+        "order": 4,
+        "options": [
+          { "text": "gender", "value": 12 },
+          { "text": "dob", "value": 13 },
+          { "text": "age", "value": 14 },
+          { "text": "height", "value": 15 },
+          { "text": "weight", "value": 16 },
+          { "text": "bmi", "value": 17 }
+        ]
+      },
+      {
+        "text": "What should we focus on together? (Multi-select)",
+        "subtitle": "Exploring the key areas where our teamwork can make the biggest impact.",
+        "order": 5,
+        "options": [
+          { "text": "Strong immune system", "value": 18 },
+          { "text": "Better digestion", "value": 19 },
+          { "text": "Boosting energy", "value": 20 },
+          { "text": "Challenging myself", "value": 21 },
+          { "text": "Improving sleep quality ", "value": 22 },
+          { "text": "Mental clarity", "value": 23 },
+          { "text": "Reducing stress and tension ", "value": 24 },
+          { "text": "Increasing self-confidence ", "value": 25 },
+          { "text": "Longer and healthier life", "value": 26 }
+        ]
+      },
+      {
+        "text": "Which intermittent fasting method do you prefer? ",
+        "subtitle": "Various intermittent fasting methods can help us choose the one that best fits our lifestyle and goals.",
+        "order": 6,
+        "options": [
+            { "text": "16:8 (16 hours fasting, 8 hours eating window)", "value": 27 },
+            { "text": "5:2 (5 days normal, 2 days low calorie) ", "value": 28 },
+            { "text": "OMAD (One Meal a Day) ", "value": 29 } ,    
+            { "text": "I haven’t decided yet", "value": 30 }
+        ]
+      },
+      {
+        "text": "How many days a week do you plan to fast?  ",
+        "subtitle": "Consider how many days each week you intend to dedicate to fasting.",
+        "order": 7,
+        "options": [
+            { "text": "1-2 days", "value": 31 },
+            { "text": "3-4 days ", "value": 32 },
+            { "text": "5-6 days ", "value": 33 },
+            { "text": "Every day ", "value": 34 },
+            { "text": "I’m not sure yet", "value": 35 }
+        ]
+      },
+      {
+        "text": "How many meals do you eat per day? ",
+        "subtitle": "Your daily meal frequency can help you make better dietary choices and maintain a balanced lifestyle.",
+        "order": 8,
+        "options": [
+            { "text": "1", "value": 36 },
+            { "text": "2", "value": 37 },
+            { "text": "3", "value": 38 },
+            { "text": "More Than 3", "value": 39 }
+        ]
+      },
+      {
+        "text": "What time do you usually have your first meal?  ",
+        "subtitle": "Your first meal can provide insight into your eating habits and help you optimize your nutrition throughout the day.",
+        "order": 9,
+        "options": [
+            { "text": "mealTime", "value": 40 }
+        ]
+      },
+      {
+        "text": "Do you track the nutritional value of your meals?    ",
+        "subtitle": "Your meals can reveal patterns in your eating habits and guide you in making healthier choices throughout the day.",
+        "order": 10,
+        "options": [
+            { "text": "Regularly", "value": 41 },
+            { "text": "Sometimes", "value": 42 },
+            { "text": "Not Really", "value": 43 }
+        ]
+      },
+      {
+        "text": "Do you know what calories are? ",
+        "subtitle": "Calories measure energy in food. Understanding them helps manage fasting and nutrition goals effectively",
+        "order": 11,
+        "options": [
+            { "text": "Yes", "value": 44 },
+            { "text": "No", "value": 45 },
+            { "text": "A little", "value": 46 }
+        ]
+      },
+      {
+        "text": "How many calories do you consume daily on average?",
+        "subtitle": "YEstimating your daily intake helps us provide better fasting and meal recommendations.",
+        "order": 12,
+        "options": [
+            { "text": "Less than 1500 kcal", "value": 47 },
+            { "text": "Between 1500-2000 kcal ", "value": 48 },
+            { "text": "Between 2000-2500 kcal ", "value": 49 },
+            { "text": "More than 2500 kcal ", "value": 50 },
+            { "text": "I’m not sure", "value": 51 }
+        ]
+      },
+      {
+        "text":"How would you describe your eating habits? (Multi-select)",
+        "subtitle":"Estimating your daily intake helps us provide better fasting and meal recommendations.",
+        "order": 13,
+        "options":[
+            { "text": "Normal", "value": 52 },
+            { "text": "Pescatarian", "value": 53 },
+            { "text": "Vegetarian", "value": 54 },
+            { "text": "Vegan", "value": 55 },
+            { "text": "Ketogenic", "value": 56 },
+            { "text": "Paleo", "value": 57 },
+            { "text": "Ketogenic Vegan ", "value": 58 },
+            { "text": "Lactose-free ", "value": 59 },
+            { "text": "Gluten-free", "value": 60 },
+            { "text": "Mediterranean diet", "value": 61 }
+        ]
+      },
+      {
+        "text":"How much water do you drink daily?",
+        "subtitle":"Proper hydration supports fasting, energy levels, and overall well-being.",
+        "order": 14,
+        "options":[
+            { "text": "About 2 glasses ", "value": 62 },
+            { "text": "Between 2-6 glasses", "value": 63 },
+            { "text": "More than 6 glasses", "value": 64 },
+            { "text": "I mostly drink coffee and tea", "value": 65 }
+    ]
+  },
+        {
+            "text":"How often do you exercise? ",
+            "subtitle":"Your activity level affects your fasting needs. Let’s align your plan accordingly.",
+            "order": 15,
+            "options":[
+                { "text": "Never", "value": 66 },
+                { "text": "Once a week", "value": 67 },
+                { "text": "2-3 times a week", "value": 68 },
+                { "text": "Almost every day", "value": 69 }
+            ]
+        },
+        {
+            "text":"When do you usually exercise? ",
+            "subtitle":"Knowing your workout time helps us optimize fasting and energy management.",
+            "order": 16,
+            "options":[
+                { "text": "Morning", "value": 70 },
+                { "text": "Noon", "value": 71 },
+                { "text": "Evening", "value": 72 },
+                { "text": "I don’t exercise", "value": 73 }
+            ]
+        },
+        {
+            "text":"How would you describe your lifestyle? ",
+            "subtitle":"Your daily routine impacts your fasting success. Let’s personalize your experience.",
+            "order": 17,
+            "options":[
+                { "text": "Sedentary", "value": 74 },
+                { "text": "Somewhat active", "value": 75 },
+                { "text": "Very active", "value": 76 }
+            ]
+        },
+        {
+            "text":"What is your goal weight?",
+            "subtitle":"We use this info to tailor your fasting plan and progress tracking.",
+            "order": 18,
+            "options":[
+                { "text": "Sedentary", "value": 77 },
+                { "text": "Somewhat active", "value": 78 },
+                { "text": "Very active", "value": 79 }
+            ]
+        }
+  ],
+    "plans": [
+    {
+      "type": "Basic",
+      "months": 3,
+      "price": 34.99,
+      "priceText": "$11.66/month",
+      "deviceId": "unique-device-id-123",
+      "description": "only $34.99 for 3 months"
+    },
+    {
+      "type": "Best price",
+      "months": 12,
+      "price": 79.99,
+      "priceText": "$6.66/month",
+      "deviceId": "unique-device-id-123",
+      "description": "only $79.99 annually"
+    },
+    {
+      "type": "Popular",
+      "months": 6,
+      "price": 49.99,
+      "priceText": "$6.66/month",
+      "deviceId": "unique-device-id-123",
+      "description": "only $49.99 for 6 months"
+    }
+  ]
+}
+  
