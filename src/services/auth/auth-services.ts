@@ -3,12 +3,12 @@ import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import { httpStatusCode } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
-import { pricePlanModel } from "src/models/price-plan/price-plan-schema";
-import { questionResponseModel } from "src/models/question-response/question-response-schema";
-import { questionModel } from "src/models/questions/questions-schema";
+import { pricePlanModel } from "src/models/admin/price-plan-schema";
+import { questionResponseModel } from "src/models/admin/question-response-schema";
+import { questionModel } from "src/models/admin/questions-schema";
 import { userPlanModel } from "src/models/user-plan/user-plan-schema";
 import { UserDocument, usersModel } from "src/models/user/user-schema";
-import { sendPasswordResetEmail } from "src/utils/mails/mail";
+import { sendEmailVerificationMail, sendPasswordResetEmail } from "src/utils/mails/mail";
 import {
   generateUserToken,
   getSignUpQueryByAuthType,
@@ -24,6 +24,7 @@ import {
   getPasswordResetTokenByToken,
 } from "src/utils/mails/token";
 import { passwordResetTokenModel } from "src/models/password-token-schema";
+import { generateOtpWithTwilio } from "src/utils/sms/sms";
 configDotenv();
 
 const sanitizeUser = (user: any): UserDocument => {
@@ -39,7 +40,7 @@ export const createQuestionsServices = async (payload: any, res: Response) => {
   // const result = await questionModel.insertMany(payload.questions);
   return {
     success: true,
-    message: "Questions retrieved successfully",
+    message: "Questions created successfully",
   };
 };
 export const createPlanServices = async (payload: any, res: Response) => {
@@ -126,7 +127,6 @@ export const saveAnswerServices = async (payload: any, res: Response) => {
     );
   }
 };
-
 export const savePricePlanServices = async (payload: any, res: Response) => {
   const { deviceId, planId } = payload;
   if (!deviceId || !planId) {
@@ -375,3 +375,50 @@ export const userSignInServices = async (
     data: sanitizeUser(user),
   };
 };
+
+export const generateAndSendOTP = async (payload: { email?: string; phoneNumber?: string }) => {
+    const { email, phoneNumber } = payload;
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 20 * 60 * 1000); // OTP expires in 20 minutes
+
+    let user;
+    if (email) {
+      user = await usersModel.findOneAndUpdate(
+        { email },
+        {
+          $set: {
+            "otp.code": otp,
+            "otp.expiresAt": expiresAt,
+          },
+        },
+        { upsert: true, new: true }
+      );
+    } else if (phoneNumber) {
+      user = await usersModel.findOneAndUpdate(
+        { phoneNumber },
+        {
+          $set: {
+            "otp.code": otp,
+            "otp.expiresAt": expiresAt,
+          },
+        },
+        { upsert: true, new: true }
+      );
+    }
+
+
+    if (user) {
+      // No need to call save if findOneAndUpdate handles the commit
+      console.log('OTP successfully generated and saved for user: ', user);
+    }
+
+    // Send OTP via the respective method
+    if (phoneNumber) {
+      await generateOtpWithTwilio(phoneNumber, otp);
+    }
+    if (email) {
+      await sendEmailVerificationMail(email, otp, user?.language || "english");
+    }
+    return { success: true, message: "OTP sent successfully" };
+  } 

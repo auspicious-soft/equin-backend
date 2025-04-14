@@ -8,6 +8,8 @@ export interface OptionDocument {
 export interface QuestionDocument extends Document {
     text: string;
     subtitle: string;
+    type: "mcq" | "multiSelect" | "time" | "number" | "profile";
+    next: string;
     options: OptionDocument[];
     order: number;
 }
@@ -19,6 +21,15 @@ const questionSchema = new mongoose.Schema(
       required: true,
     },
     subtitle: {
+      type: String,
+      required: true,
+    },
+    type: {
+      type: String,
+      required: true,
+      enum: ["mcq", "multiSelect", "time", "number", "profile"],
+    },
+    next: {
       type: String,
       required: true,
     },

@@ -15,7 +15,7 @@ import {
   verifyOtpPasswordResetService,
   verifyOTPServices,
 } from "src/services/auth/auth-services";
-import { verifyOTPService } from "src/services/user/user-service";
+
 
 //************************* META DATA *************************/
 
@@ -157,7 +157,7 @@ export const updateForgottenPassword = async (req: Request, res: Response) => {
 export const userSignIn = async (req: Request, res: Response) => {
     try {
       const response = await userSignInServices(req.body, req.body.authType, res);
-      return res.status(httpStatusCode.CREATED).json(response);
+      return res.status(httpStatusCode.OK).json(response);
     } catch (error: any) {
       const { code, message } = errorParser(error);
       return res

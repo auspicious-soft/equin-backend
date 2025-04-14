@@ -1,21 +1,11 @@
 import { Request, Response } from "express";
 import { errorResponseHandler } from "../../lib/errors/error-response-handler";
 import { UserDocument, usersModel } from "../../models/user/user-schema";
-import bcrypt from "bcryptjs";
-import { generatePasswordResetToken, generatePasswordResetTokenByPhone, getPasswordResetTokenByToken } from "../../utils/mails/token";
-import { httpStatusCode } from "../../lib/constant";
-import { nestedQueryBuilder } from "src/utils";
-// import { ordersModel } from "../../models/orders/orders-schema";
-import { deleteFileFromS3 } from "src/config/s3";
 import { configDotenv } from "dotenv";
-
-import { addedUserCreds, sendEmailVerificationMail, sendLoginCredentialsEmail, sendPasswordResetEmail } from "src/utils/mails/mail";
-import { passwordResetTokenModel } from "src/models/password-token-schema";
-import { generateOtpWithTwilio } from "src/utils/sms/sms";
-import { generateUserToken, getSignUpQueryByAuthType, handleExistingUser, hashPasswordIfEmailAuth, sendOTPIfNeeded, validatePassword, validateUserForLogin } from "src/utils/userAuth/signUpAuth";
-import { customAlphabet } from "nanoid";
-// import { awardsModel } from "src/models/awards/awards-schema";
-// import { readProgressModel } from "src/models/user-reads/read-progress-schema";
+import { fastingRecordModel } from "src/models/user/fasting-schema";
+import { httpStatusCode } from "src/lib/constant";
+import { healthDataModel } from "src/models/user/health-data-schema";
+import { waterTrackerModel } from "src/models/user/water-tracker-schema";
 
 configDotenv();
 
@@ -37,491 +27,250 @@ const sanitizeUser = (user: any): UserDocument => {
   return sanitized;
 };
 
+//*****************************FOR EQUIN APP *********************************/
 
-export const loginUserService = async (userData: UserDocument, authType: string, res: Response) => {
+export const userHomeService = async (req: Request, res: Response) => {
+  const userData = req.user as any;
 
-  let query = getSignUpQueryByAuthType(userData, authType);
-  
-  let user: any = await usersModel.findOne(query);
+  // Calculate fasting streak
+  const today = new Date().toISOString().split("T")[0];
+  let fastingStreak = 0;
 
-  if (!user && (authType === 'Google' || authType === 'Apple' || authType === 'Facebook')) {
-      user = await createNewUser(userData, authType); // You should implement the createNewUser function as per your needs
+  // Get records sorted by date in descending order
+  const fastingRecords = await fastingRecordModel
+    .find({
+      userId: userData.id,
+      isFasting: true,
+    })
+    .sort({ date: -1 });
+
+  // Calculate streak
+  for (const record of fastingRecords) {
+    const recordDate = new Date(record.date);
+    const previousDate = new Date(today);
+    previousDate.setDate(previousDate.getDate() - fastingStreak);
+
+    if (
+      recordDate.toISOString().split("T")[0] ===
+      previousDate.toISOString().split("T")[0]
+    ) {
+      fastingStreak++;
+    } else {
+      break;
+    }
   }
 
-  let validationResponse = await validateUserForLogin(user, authType, userData, res);
-  if (validationResponse) return validationResponse;
+  // Calculate this week's fasting days and hours (Monday to Sunday)
+  const currentDate = new Date();
+  const currentDay = currentDate.getDay(); // 0 is Sunday, 1 is Monday, etc.
 
-  if (authType === "Email") {
-      let passwordValidationResponse = await validatePassword(userData, user.password, res);
-      if (passwordValidationResponse) return passwordValidationResponse;
-  }
+  // Calculate the start of week (Monday)
+  const startOfWeek = new Date();
+  startOfWeek.setDate(
+    currentDate.getDate() - (currentDay === 0 ? 6 : currentDay - 1)
+  );
+  startOfWeek.setHours(0, 0, 0, 0);
 
-  user.token = generateUserToken(user as any);
-  
-  await user.save();
-  return {
-      success: true,
-      message: "Logged in successfully",
-      data: sanitizeUser(user),
-  };
-};
+  // Calculate the end of week (Sunday)
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
 
-const createNewUser = async (userData: any, authType: string) => {
-  let newUser = new usersModel({
-      email: userData.email, 
-      lastName: userData.lastName,   
-      firstName: userData.firstName,   
-      authType: authType,    
-      fcmToken: userData.fcmToken,   
-      profilePic: userData.profilePic,   
-      password: null,        
-      token: generateUserToken(userData), 
+  const thisWeekRecords = await fastingRecordModel.find({
+    userId: userData.id,
+    date: {
+      $gte: startOfWeek.toISOString().split("T")[0],
+      $lte: endOfWeek.toISOString().split("T")[0],
+    },
+    isFasting: true,
   });
 
-  await newUser.save();
-  
-  return newUser;
-};
+  const thisWeekFastingDays = thisWeekRecords.length;
+  const thisWeekFastingHours = thisWeekFastingDays * 16;
 
-export const signUpService = async (userData: UserDocument, authType: string, res: Response) => {
+  // Get water intake goal settings
+  const waterGoalData = await healthDataModel.findOne({ userId: userData.id });
 
-    if (!authType) {
-      return errorResponseHandler("Auth type is required", httpStatusCode.BAD_REQUEST, res);
-    }
+  // Get today's water intake records
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
 
-    // if (authType === "Email" && (!userData.password || !userData.email)) {
-    //   return errorResponseHandler("Both email and password is required for Email authentication", httpStatusCode.BAD_REQUEST, res);
-    // }
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
 
-    const query = getSignUpQueryByAuthType(userData, authType);
-    const existingUser = await usersModel.findOne(query);
-    const existingUserResponse = existingUser ? handleExistingUser(existingUser as any, authType, res) : null;
-    if (existingUserResponse) return existingUserResponse;
+  const todayWaterRecords = await waterTrackerModel.find({
+    userId: userData.id,
+    date: {
+      $gte: startOfToday,
+      $lte: endOfToday,
+    },
+  });
 
-    const newUserData = { ...userData, authType };
-    newUserData.password = await hashPasswordIfEmailAuth(userData, authType);
-    const identifier = customAlphabet("0123456789", 5);
-    (newUserData as any).identifier = identifier();
-    const user = await usersModel.create(newUserData);
-    await sendOTPIfNeeded(userData, authType);
-
-    if (!process.env.AUTH_SECRET) {
-      return errorResponseHandler("AUTH_SECRET is not defined", httpStatusCode.INTERNAL_SERVER_ERROR, res);
-    }
-    if((authType !== "Email") ) {
-    user.token = generateUserToken(user as any);
-    }
-    await user.save();
-    return { success: true, message: authType==="Email" ? "OTP sent for verification" : "Sign-up successfully", data: sanitizeUser(user) };
-
-};
-
-export const WhatsappLoginService = async (userData: UserDocument, authType: string, res: Response) => {
-
-    if (!authType) {
-      return errorResponseHandler("Auth type is required", httpStatusCode.BAD_REQUEST, res);
-    }
-
-    const existingUser = await usersModel.findOne({ phoneNumber: userData.phoneNumber });
-
-    if (existingUser) {
-      await sendOTPIfNeeded(userData, authType);  
-      return { success: true, message: "OTP sent successfully", data: sanitizeUser(existingUser) };
-    }
-
-    // If user doesn't exist, create a new user
-    const newUserData = { ...userData, authType };
-    newUserData.password = await hashPasswordIfEmailAuth(userData, authType);
-    const identifier = customAlphabet("0123456789", 5);
-    (newUserData as any).identifier = identifier();
-
-    // Create new user
-    const user = await usersModel.create(newUserData);
-    
-    // Send OTP if needed for new user
-    await sendOTPIfNeeded(userData, authType);
-
-    if (!process.env.AUTH_SECRET) {
-      return errorResponseHandler("AUTH_SECRET is not defined", httpStatusCode.INTERNAL_SERVER_ERROR, res);
-    }
-
-    // Generate token and save user
-    // user.token = generateUserToken(user as any);
-    await user.save();
-    
-    return { success: true, message: "OTP sent successfully", data: sanitizeUser(user) };
-  
-};
-
-
-export const forgotPasswordUserService = async (payload: any, res: Response) => {
-  const { email } = payload;
-  const user = await usersModel.findOne({ email }).select("+password");
-  if (!user) return errorResponseHandler("Email not found", httpStatusCode.NOT_FOUND, res);
-  if(user.authType !== "Email") return errorResponseHandler(`Try login using ${user.authType}`, httpStatusCode.BAD_REQUEST, res);
-  const passwordResetToken = await generatePasswordResetToken(email);
-
-  if (passwordResetToken !== null) {
-    await sendPasswordResetEmail(email, passwordResetToken.token, user.language);
-    return { success: true, message: "Password reset email sent with otp" };
-  }
-};
-
-export const newPassswordAfterOTPVerifiedUserService = async (payload: { password: string; otp: string }, res: Response) => {
-  const { password, otp } = payload;
-
-  const existingToken = await getPasswordResetTokenByToken(otp);
-  if (!existingToken) return errorResponseHandler("Invalid OTP", httpStatusCode.BAD_REQUEST, res);
-
-  const hasExpired = new Date(existingToken.expires) < new Date();
-  if (hasExpired) return errorResponseHandler("OTP expired", httpStatusCode.BAD_REQUEST, res);
-
-  let existingUser: any;
-
-  if (existingToken.email) {
-    existingUser = await usersModel.findOne({ email: existingToken.email, authType: "Email" });
-  } else if (existingToken.phoneNumber) {
-    existingUser = await usersModel.findOne({ phoneNumber: existingToken.phoneNumber });
-  }
-  if (!existingUser) {
-    return errorResponseHandler(`Please try login with ${existingUser.authType}`, httpStatusCode.BAD_REQUEST, res);
-  }
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const response = await usersModel.findByIdAndUpdate(existingUser._id, { password: hashedPassword }, { new: true });
-  await passwordResetTokenModel.findByIdAndDelete(existingToken._id);
+  const todayTotalWaterIntake = todayWaterRecords.reduce(
+    (sum, record) => sum + ((record as any)?.waterIntake || 0),
+    0
+  );
 
   return {
     success: true,
-    message: "Password updated successfully",
-    data: sanitizeUser(response),
+    message: "User home page",
+    data: {
+      fastingStreak,
+      thisWeekFastingDays,
+      thisWeekFastingHours,
+      todaysFastingStatus: fastingRecords[0]?.date === today ? true : false,
+      weekRange: {
+        start: startOfWeek.toISOString().split("T")[0],
+        end: endOfWeek.toISOString().split("T")[0],
+      },
+      waterIntake: {
+        today: todayTotalWaterIntake,
+        goal: waterGoalData?.waterIntakeGoal.dailyGoal || 0,
+        containerType: waterGoalData?.waterIntakeGoal.containerType || "glass",
+        containerSize: waterGoalData?.waterIntakeGoal.containerSize || 0,
+        unit: waterGoalData?.waterIntakeGoal.unit || "ml",
+        progress: waterGoalData?.waterIntakeGoal.dailyGoal
+          ? Math.round(
+              (todayTotalWaterIntake /
+                waterGoalData.waterIntakeGoal.dailyGoal) *
+                100
+            )
+          : 0,
+      },
+    },
   };
 };
 
-export const verifyOtpPasswordResetService = async (token: string, res: Response) => {
-  const existingToken = await getPasswordResetTokenByToken(token);
-  if (!existingToken) return errorResponseHandler("Invalid token", httpStatusCode.BAD_REQUEST, res);
+export const fastingTodayService = async (req: Request, res: Response) => {
+  const userData = req.user as any;
 
-  const hasExpired = new Date(existingToken.expires) < new Date();
-  if (hasExpired) return errorResponseHandler("OTP expired", httpStatusCode.BAD_REQUEST, res);
-  return { success: true, message: "Token verified successfully" };
-};
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0];
 
-export const createUserService = async (payload: any, res: Response) => {
-  const emailExists = await usersModel.findOne({ email: payload.email });
-  if (emailExists) return errorResponseHandler("Email already exists", httpStatusCode.BAD_REQUEST, res);
-  const phoneExists = await usersModel.findOne({
-    phoneNumber: payload.phoneNumber,
+  // Check if a record already exists for today
+  const existingRecord = await fastingRecordModel.findOne({
+    userId: userData.id,
+    date: today,
   });
-  if (phoneExists) return errorResponseHandler("Phone number already exists", httpStatusCode.BAD_REQUEST, res);
 
-  // Hash the password before saving the user
-  // const hashedPassword = bcrypt.hashSync(payload.password, 10);
-  // payload.password = hashedPassword;
-  const newUser = new usersModel(payload);
-  await addedUserCreds(newUser);
-  newUser.password = await hashPasswordIfEmailAuth(payload, "Email");
-  const identifier = customAlphabet("0123456789", 5);
-  (newUser as any).identifier = identifier();
+  if (existingRecord) {
+    return errorResponseHandler(
+      "Fasting record already exists for today",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
 
-  const response = await newUser.save();
+  // Create new fasting record for today
+  const fastingRecord = await fastingRecordModel.create({
+    userId: userData.id,
+    date: today,
+    isFasting: true,
+  });
 
   return {
     success: true,
-    message: "User created successfully",
+    message: "Fasting record created for today",
+    data: fastingRecord,
+  };
+};
+
+export const waterDataService = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const {
+    containerType,
+    containerSize,
+    dailyGoal,
+    waterReminder = false,
+  } = req.body;
+
+  // Validate input data
+  if (!containerType || !containerSize || !dailyGoal) {
+    return errorResponseHandler(
+      "containerType, containerSize, and dailyGoal are required",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Validate containerType
+  const validContainerTypes = ["bottle", "cup", "glass"];
+  if (!validContainerTypes.includes(containerType)) {
+    return errorResponseHandler(
+      `containerType must be one of: ${validContainerTypes.join(", ")}`,
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Validate containerSize and dailyGoal as positive numbers
+  if (containerSize <= 0 || dailyGoal <= 0) {
+    return errorResponseHandler(
+      "containerSize and dailyGoal must be positive numbers",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Check if record exists
+  const existingRecord = await healthDataModel.findOne({ userId: userData.id });
+
+  let response;
+  if (existingRecord) {
+    // Update existing record
+    response = await healthDataModel.findOneAndUpdate(
+      { userId: userData.id },
+      {
+        waterIntakeGoal: {
+          containerType,
+          containerSize,
+          dailyGoal,
+          waterReminder: waterReminder,
+        },
+      },
+      { new: true }
+    );
+  } else {
+    // Create new record
+    response = await healthDataModel.create({
+      userId: userData.id,
+      waterIntakeGoal: {
+        containerType,
+        containerSize,
+        dailyGoal,
+        waterReminder: waterReminder,
+      },
+    });
+  }
+
+  return {
+    success: true,
+    message: existingRecord
+      ? "Water tracker updated successfully"
+      : "Water tracker created successfully",
     data: response,
   };
 };
 
-// export const getUserService = async (id: string, res: Response) => {
-//   const user = await usersModel.findById(id);
-//   if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
-//   const totalAmountPaidResult = await ordersModel.aggregate([{ $match: { userId: user._id } }, { $group: { _id: null, totalAmount: { $sum: "$totalAmount" } } }]);
-//   const amountPaid = totalAmountPaidResult.length > 0 ? totalAmountPaidResult[0].totalAmount : 0;
-//   // Fetch all orders for the user
-//   const userOrders = await ordersModel.find({ userId: user._id }).populate({ path: "productIds", model: "products" });
+export const waterTracketService = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const { waterIntake } = req.body;
 
-//   // Calculate the number of books purchased by the user
-//   const booksPurchasedCount = userOrders.reduce((count, order) => {
-//     return count + order.productIds.filter((product: any) => product.type === "e-book").length;
-//   }, 0);
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date();
 
-//   // Calculate the number of courses purchased by the user
-//   const courseCount = userOrders.reduce((count, order) => {
-//     return count + order.productIds.filter((product: any) => product.type === "course").length;
-//   }, 0);
-
-//   // Calculate the number of events attended by the user
-//   //  const eventsCount = await eventsModel.countDocuments({ userId: user._id });
-
-//   return {
-//     success: true,
-//     message: "User retrieved successfully",
-//     data: {
-//       data: user,
-//       amountPaid,
-//       booksPurchasedCount,
-//       courseCount,
-//       // Events,
-//     },
-//   };
-// };
-
-export const updateUserService = async (id: string, payload: any, res: Response) => {
-  const user = await usersModel.findById(id);
-  if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
-
-  const updatedUser = await usersModel.findByIdAndUpdate(id, payload, {
-    new: true,
-  });
-  return {
-    success: true,
-    message: "User updated successfully",
-    data: updatedUser,
-  };
-};
-
-export const deleteUserService = async (id: string, res: Response) => {
-  const user = await usersModel.findById(id);
-  if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
-
-  const deletedUser = await usersModel.findByIdAndDelete(id);
-  if (deletedUser?.profilePic) {
-    await deleteFileFromS3(deletedUser?.profilePic);
-  }
-  return {
-    success: true,
-    message: "User deleted successfully",
-    data: deletedUser,
-  };
-};
-
-// export const getUserProfileDetailService = async (id: string, payload: any, res: Response) => {
-//   const user = await usersModel.findById(id);
-//   if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
-
-//   const year = payload.duration;
-//   const userOrders = await ordersModel.find({ userId: id }).populate({
-//     path: "productIds",
-//     populate: [
-//       { path: "authorId", model: "authors" },
-//       { path: "categoryId", model: "categories" },
-//     ],
-//   });
-
-//   let filteredOrders = userOrders;
-
-//   if (year) {
-//     filteredOrders = userOrders.filter((order: any) => {
-//       const parsedDate = new Date(order.createdAt);
-//       if (isNaN(parsedDate.getTime())) {
-//         console.warn("Invalid createdAt for order:", order);
-//         return false;
-//       }
-
-//       const orderYear = parsedDate.getFullYear().toString();
-//       return orderYear === year;
-//     });
-//   }
-
-//   const totalAmountPaid = filteredOrders.reduce((acc, order) => acc + order.totalAmount, 0);
-
-//   const coursesPurchased = filteredOrders
-//     .flatMap((order) => order.productIds)
-//     .filter((product: any) => product?.type === "course")
-//     .map((product) => product._id);
-
-//   const booksPurchased = filteredOrders
-//     .flatMap((order) => order.productIds)
-//     .filter((product: any) => product?.type === "e-book")
-//     .map((product) => product._id);
-
-//   const booksPurchasedCount = booksPurchased.length;
-//   const coursesCount = coursesPurchased.length;
-
-//   return {
-//     success: true,
-//     message: "User profile details retrieved successfully",
-//     data: {
-//       user,
-//       userOrders: userOrders,
-//       totalAmountPaid: totalAmountPaid || 0,
-//       booksPurchasedCount: booksPurchasedCount || 0,
-//       coursesCount: coursesCount || 0,
-//       eventsCount: 0,
-//     },
-//   };
-// };
-
-// export const getAllUserService = async (payload: any, res: Response) => {
-//   const page = parseInt(payload.page as string) || 1;
-//   const limit = parseInt(payload.limit as string) || 0;
-//   const offset = (page - 1) * limit;
-//   let { query, sort } = nestedQueryBuilder(payload, ["name", "email"]);
-
-//   if (payload.duration) {
-//     const durationDays = parseInt(payload.duration);
-//     if (durationDays === 30 || durationDays === 7) {
-//       const date = new Date();
-//       date.setDate(date.getDate() - durationDays);
-//       (query as any) = { ...query, createdAt: { $gte: date } };
-//     }
-//   }
-
-//   const totalDataCount = Object.keys(query).length < 1 ? await usersModel.countDocuments() : await usersModel.countDocuments(query);
-
-//   const users = await usersModel.find(query).sort(sort).skip(offset).limit(limit).select("-__v -password -otp -token -fcmToken -whatsappNumberVerified -emailVerified");
-
-//   if (!users.length) {
-//     return {
-//       data: [],
-//       page,
-//       limit,
-//       success: false,
-//       message: "No users found",
-//       total: 0,
-//     };
-//   }
-
-//   const userIds = users.map((user) => user._id);
-//   const awards = await awardsModel.find({ userId: { $in: userIds } }).select("userId level badge");
-
-//   const awardsMap = new Map(awards.map((award) => [award.userId.toString(), award]));
-
-//   const results = users.map((user) => ({
-//     ...user.toObject(),
-//     award: awardsMap.get(user._id.toString()) || null,
-//   }));
-
-//   return {
-//     page,
-//     limit,
-//     success: true,
-//     message: "Users retrieved successfully",
-//     total: totalDataCount,
-//     data: results,
-//   };
-// };
-
-
-export const generateAndSendOTP = async (payload: { email?: string; phoneNumber?: string }) => {
-    const { email, phoneNumber } = payload;
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 20 * 60 * 1000); // OTP expires in 20 minutes
-
-    let user;
-    if (email) {
-      user = await usersModel.findOneAndUpdate(
-        { email },
-        {
-          $set: {
-            "otp.code": otp,
-            "otp.expiresAt": expiresAt,
-          },
-        },
-        { upsert: true, new: true }
-      );
-    } else if (phoneNumber) {
-      user = await usersModel.findOneAndUpdate(
-        { phoneNumber },
-        {
-          $set: {
-            "otp.code": otp,
-            "otp.expiresAt": expiresAt,
-          },
-        },
-        { upsert: true, new: true }
-      );
-    }
-
-
-    if (user) {
-      // No need to call save if findOneAndUpdate handles the commit
-      console.log('OTP successfully generated and saved for user: ', user);
-    }
-
-    // Send OTP via the respective method
-    if (phoneNumber) {
-      await generateOtpWithTwilio(phoneNumber, otp);
-    }
-    if (email) {
-      await sendEmailVerificationMail(email, otp, user?.language || "english");
-    }
-
-    return { success: true, message: "OTP sent successfully" };
-  } 
-// };
-
-export const verifyOTPService = async (payload: any) => {
-  const { email, phoneNumber, otp } = payload;
- 
-  const user = await usersModel.findOne({
-    $or: [{ email }, { phoneNumber }],
-    "otp.code": otp,
-    "otp.expiresAt": { $gt: new Date() },
+  // Create new fasting record for today
+  const fastingRecord = await waterTrackerModel.create({
+    userId: userData.id,
+    waterIntake: waterIntake,
+    date: today,
   });
 
-  if (!user) {
-    throw new Error("Invalid or expired OTP");
-  }
-
-  if (user.otp) {
-    user.otp.code = "";
-    user.otp.expiresAt = new Date(0);
-  }
-  if (email) {
-    user.emailVerified = true;
-  }
-  user.token = generateUserToken(user as any);
-  await user.save();
-
-  return { user: sanitizeUser(user), message: "OTP verified successfully" };
-};
-
-export const changePasswordService = async (userData: any, payload: any, res: Response) => {
-  const { newPassword } = payload;
-  const user = await usersModel.findById(userData.id).select("+password");
-  if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-  user.password = hashedPassword;
-  await user.save();
   return {
     success: true,
-    message: "Password updated successfully",
-    data: sanitizeUser(user),
+    message: "Water record created",
+    data: fastingRecord,
   };
 };
 
-// export const getCurrentUserDetailsService = async (userData: any, res: Response) => {
-//   const user = await usersModel.findById(userData.id).select("-__v -password -otp -token -fcmToken -whatsappNumberVerified -emailVerified");
-//   if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
-//   const award = await awardsModel.findOne({ userId: userData.id });
-//   const booksReadCount = await readProgressModel.countDocuments({ userId: userData.id, progress: 100 });
-
-//   return {
-//     success: true,
-//     message: "User retrieved successfully",
-//     data: {
-//       data: user,
-//       award,
-//       booksReadCount,
-//     },
-//   };
-// };
-export const updateCurrentUserDetailsService = async (userData: any, payload: any, res: Response) => {
-  const user = await usersModel.findById(userData.id);
-  if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
-  const updatedUser = await usersModel
-    .findByIdAndUpdate(userData.id, payload, {
-      new: true,
-    })
-    .select("-__v -password -otp -token -fcmToken -whatsappNumberVerified -emailVerified");
-
-  return {
-    success: true,
-    message: "User retrieved successfully",
-    data: {
-      data: updatedUser,
-    },
-  };
-};
+//*****************************FOR EQUIN APP *********************************/

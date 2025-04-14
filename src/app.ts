@@ -6,15 +6,9 @@ import { fileURLToPath } from "url";
 import connectDB from "./config/db";
 import { admin, auth, user } from "./routes";
 // import admin from "firebase-admin"
-import { checkValidAdminRole, checkValidPublisherRole } from "./utils";
 import bodyParser from "body-parser";
-import {
-  login,
-  newPassswordAfterOTPVerified,
-} from "./controllers/admin/admin-controller";
-import { forgotPassword } from "./controllers/admin/admin-controller";
-import { checkAuth, checkPublisherAuth } from "./middleware/check-auth";
-import { createPricePlan, createQuestions, getPricePlan, getQuestions, saveAnswers, savePricePlan, userSignUp } from "./controllers/auth/auth-controller";
+import { checkAuth } from "./middleware/check-auth";
+
 
 // Create __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url); // <-- Define __filename
@@ -60,17 +54,12 @@ app.get("/", (_, res: any) => {
   res.send("Hello world entry point 🚀✅");
 });
 
-// app.use("/api/admin",checkValidAdminRole,checkAuth, admin);
-// app.use("/api/user",checkAuth, user);
-
-//adminAuth routes 
-// app.post("/api/login", login);
-// app.post("/api/verify-otp", verifyOtpPasswordReset);
-// app.post("/api/forgot-password", forgotPassword);
-// app.patch("/api/new-password-otp-verified", newPassswordAfterOTPVerified);
 
 //*****************User Auth Routes**************/
 app.use("/api", auth)
+
+//*****************User Routes******************/
+app.use("/api",checkAuth, user)
 
 
 app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
