@@ -6,6 +6,9 @@ import { fastingRecordModel } from "src/models/user/fasting-schema";
 import { httpStatusCode } from "src/lib/constant";
 import { healthDataModel } from "src/models/user/health-data-schema";
 import { waterTrackerModel } from "src/models/user/water-tracker-schema";
+import { userPlanModel } from "src/models/user-plan/user-plan-schema";
+import { essentialTipModel } from "src/models/admin/essential-tips-schema";
+import { pricePlanModel } from "src/models/admin/price-plan-schema";
 
 configDotenv();
 
@@ -28,6 +31,8 @@ const sanitizeUser = (user: any): UserDocument => {
 };
 
 //*****************************FOR EQUIN APP *********************************/
+
+//Home Page APIS
 
 export const userHomeService = async (req: Request, res: Response) => {
   const userData = req.user as any;
@@ -270,6 +275,102 @@ export const waterTracketService = async (req: Request, res: Response) => {
     success: true,
     message: "Water record created",
     data: fastingRecord,
+  };
+};
+
+//My Plan Page APIS
+
+export const myPlanService = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const currentDate = new Date();
+
+  const [activePlan, essentialTips] = await Promise.all([
+    userPlanModel
+      .findOne({
+        userId: userData.id,
+        paymentStatus: "success",
+        startDate: { $lte: currentDate },
+        endDate: { $gte: currentDate },
+      })
+      .populate("planId"),
+
+    essentialTipModel
+      .find({
+        isActive: true,
+        publishDate: { $lte: currentDate },
+      })
+      .sort({ publishDate: -1 })
+      .limit(5),
+  ]);
+
+  return {
+    success: true,
+    message: activePlan ? "Active plan found" : "No active plan found",
+    data: {
+      hasActivePlan: !!activePlan,
+      plan: activePlan,
+      essentialTips,
+    },
+  };
+};
+
+export const savePricePlanServices = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const { planId } = req.body;
+
+  if (!planId) {
+    return errorResponseHandler(
+      "Invalid payload",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  const pricePlan = await pricePlanModel.findById(planId);
+  if (!pricePlan) {
+    return errorResponseHandler(
+      "Invalid planId",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  const existingActivePlan = await userPlanModel.findOne({
+    userId: userData.id,
+    planId: planId,
+    endDate: { $gte: new Date() },
+    paymentStatus: "success",
+  });
+
+  if (existingActivePlan) {
+    return errorResponseHandler(
+      "Active plan already exists",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  const result = await userPlanModel.create({
+    userId: userData.id,
+    planId: planId,
+    paymentStatus: "pending",
+    startDate: null, 
+    endDate: null, 
+    transactionId: null, 
+    paymentMethod: null,
+  });
+
+  return {
+    success: true,
+    message: "Plan initialized successfully",
+    data: {
+      planDetails: result,
+      priceInfo: {
+        amount: pricePlan.price,
+        currency: "INR",
+        duration: `${pricePlan.months} months`
+      }
+    }
   };
 };
 

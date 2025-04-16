@@ -2,13 +2,14 @@ import { Request, Response } from "express";
 import { httpStatusCode } from "../../lib/constant";
 import { errorParser } from "../../lib/errors/error-response-handler";
 import {
+  createEssentialTipsServices,
+  createMealPlanServices,
   createPlanServices,
   createQuestionsServices,
   forgotPasswordUserService,
   getPlanServices,
   getQuestionsServices,
   saveAnswerServices,
-  savePricePlanServices,
   updateForgottenPasswordService,
   userSignInServices,
   userSignUpServices,
@@ -33,6 +34,28 @@ export const createQuestions = async (req: Request, res: Response) => {
 export const createPricePlan = async (req: Request, res: Response) => {
   try {
     const response = await createPlanServices(req.body, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const createMealPlan = async (req: Request, res: Response) => {
+  try {
+    const response = await createMealPlanServices(req.body, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const createEssentialTips = async (req: Request, res: Response) => {
+  try {
+    const response = await createEssentialTipsServices(req.body, res);
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);
@@ -68,21 +91,9 @@ export const saveAnswers = async (req: Request, res: Response) => {
   }
 };
 
-export const getPricePlan = async (req: Request, res: Response) => {
+export const getPricePlan = async (req: Request, res: Response): Promise<any> => {
   try {
     const response = await getPlanServices(req.body, res);
-    return res.status(httpStatusCode.OK).json(response);
-  } catch (error: any) {
-    const { code, message } = errorParser(error);
-    return res
-      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
-      .json({ success: false, message: message || "An error occurred" });
-  }
-};
-
-export const savePricePlan = async (req: Request, res: Response) => {
-  try {
-    const response = await savePricePlanServices(req.body, res);
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);

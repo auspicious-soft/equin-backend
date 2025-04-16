@@ -25,6 +25,8 @@ import {
 } from "src/utils/mails/token";
 import { passwordResetTokenModel } from "src/models/password-token-schema";
 import { generateOtpWithTwilio } from "src/utils/sms/sms";
+import { mealPlanModel } from "src/models/admin/meal-plan-schema";
+import { essentialTipModel } from "src/models/admin/essential-tips-schema";
 configDotenv();
 
 const sanitizeUser = (user: any): UserDocument => {
@@ -47,7 +49,23 @@ export const createPlanServices = async (payload: any, res: Response) => {
   // const result = await pricePlanModel.insertMany(payload.plans);
   return {
     success: true,
-    message: "Plans created successfully",
+    message: "Pricing plans created successfully",
+  };
+};
+export const createMealPlanServices = async (payload: any, res: Response) => {
+  console.log("payload", payload);
+  // const result = await mealPlanModel.insertMany(payload.plans);
+  return {
+    success: true,
+    message: "Meal plans created successfully",
+  };
+};
+export const createEssentialTipsServices = async (payload: any, res: Response) => {
+  console.log("payload", payload);
+  // const result = await essentialTipModel.create(payload);
+  return {
+    success: true,
+    message: "New tip added successfully",
   };
 };
 
@@ -126,22 +144,6 @@ export const saveAnswerServices = async (payload: any, res: Response) => {
       res
     );
   }
-};
-export const savePricePlanServices = async (payload: any, res: Response) => {
-  const { deviceId, planId } = payload;
-  if (!deviceId || !planId) {
-    return errorResponseHandler(
-      "Invalid payload",
-      httpStatusCode.BAD_REQUEST,
-      res
-    );
-  }
-  const result = await userPlanModel.create(payload);
-  return {
-    success: true,
-    message: "Plans saved successfully",
-    data: result,
-  };
 };
 
 //************************* USER SIGNUP *************************/

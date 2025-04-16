@@ -4,6 +4,7 @@ export interface PricePlanDocument extends Document {
   type: string;
   months: number;
   price: number;
+  productId: string;
   priceText: string;
   description?: string;
   perks: {
@@ -28,6 +29,10 @@ const pricePlanSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
+      required: true,
+    },
+    productId: {
+      type: String,
       required: true,
     },
     priceText: {

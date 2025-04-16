@@ -4,11 +4,11 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db";
-import { admin, auth, user } from "./routes";
+import { admin, auth, stripe, user } from "./routes";
 // import admin from "firebase-admin"
 import bodyParser from "body-parser";
 import { checkAuth } from "./middleware/check-auth";
-
+import { handleStripeWebhook, stripeCancel, stripeSuccess } from "./controllers/stripe/stripe-controller";
 
 // Create __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url); // <-- Define __filename
@@ -60,6 +60,15 @@ app.use("/api", auth)
 
 //*****************User Routes******************/
 app.use("/api",checkAuth, user)
+
+
+//*****************Stripe Routes*****************/
+app.use('/api', checkAuth, stripe);
+app.post(`/api/stripe/webhook`, express.raw({ type: "application/json" }), handleStripeWebhook);
+
+//*****************Stripe Test Routes*****************/
+app.get('/success-test', stripeSuccess);
+app.get('/cancel-test', stripeCancel);
 
 
 app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));

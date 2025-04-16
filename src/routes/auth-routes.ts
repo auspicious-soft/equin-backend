@@ -1,12 +1,13 @@
 import { Router } from "express";
 import {
+  createEssentialTips,
+  createMealPlan,
   createPricePlan,
   createQuestions,
   forgotPassword,
   getPricePlan,
   getQuestions,
   saveAnswers,
-  savePricePlan,
   updateForgottenPassword,
   userSignIn,
   userSignUp,
@@ -21,11 +22,15 @@ const router = Router();
 
 router.post("/create-questions", createQuestions);
 router.post("/create-price-plan", createPricePlan);
+router.post("/create-meal-plan", createMealPlan);
+router.post("/add-essential-tips", createEssentialTips);
+
+
 
 router.get("/get-price-plan", getPricePlan);
 router.get("/get-questions", getQuestions);
 router.post("/save-answers", saveAnswers);
-router.post("/save-price-plan", savePricePlan);
+
 
 router.post("/user-signup", userSignUp);
 router.post("/verify-otp", verifyOTP);
