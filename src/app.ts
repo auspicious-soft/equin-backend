@@ -18,6 +18,12 @@ const __dirname = path.dirname(__filename); // <-- Define __dirname
 const PORT = process.env.PORT || 8001;
 const app = express();
 
+//*****************Stripe Routes*****************/
+//Need Raw Body
+app.post(`/webhook`, express.raw({ type: "application/json" }), handleStripeWebhook);
+//*****************Stripe Routes*****************/
+
+
 app.use(express.json());
 app.set("trust proxy", true);
 app.use(
@@ -62,13 +68,11 @@ app.use("/api", auth)
 app.use("/api",checkAuth, user)
 
 
-//*****************Stripe Routes*****************/
-app.use('/api', checkAuth, stripe);
-app.post(`/api/stripe/webhook`, express.raw({ type: "application/json" }), handleStripeWebhook);
-
 //*****************Stripe Test Routes*****************/
 app.get('/success-test', stripeSuccess);
 app.get('/cancel-test', stripeCancel);
 
+
+app.use('/api', checkAuth, stripe);
 
 app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));

@@ -7,5 +7,6 @@ router.post("/create-checkout-session", checkoutSession)
 
 //*********************Future Admin Routes ********************/
 router.put("/update-plan-price", updateProductPrice)
+router.get("/get-stripe-products", getStripeProducts)
 
 export { router };

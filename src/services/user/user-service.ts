@@ -344,7 +344,7 @@ export const savePricePlanServices = async (req: Request, res: Response) => {
 
   if (existingActivePlan) {
     return errorResponseHandler(
-      "Active plan already exists",
+      `Active plan already exists till ${existingActivePlan.endDate}`,
       httpStatusCode.BAD_REQUEST,
       res
     );
@@ -353,6 +353,7 @@ export const savePricePlanServices = async (req: Request, res: Response) => {
   const result = await userPlanModel.create({
     userId: userData.id,
     planId: planId,
+    stripeProductId: pricePlan.productId,
     paymentStatus: "pending",
     startDate: null, 
     endDate: null, 
@@ -367,7 +368,7 @@ export const savePricePlanServices = async (req: Request, res: Response) => {
       planDetails: result,
       priceInfo: {
         amount: pricePlan.price,
-        currency: "INR",
+        currency: "usd",
         duration: `${pricePlan.months} months`
       }
     }

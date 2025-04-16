@@ -4,7 +4,9 @@ export interface UserPlanDocument extends Document {
   userId?: mongoose.Types.ObjectId | null;
   deviceId?: string;
   planId: mongoose.Types.ObjectId;
-  paymentStatus: "pending" | "success" | "failed";
+  stripeProductId: string;
+  autoPayment: boolean;
+  paymentStatus: "pending" | "success" | "failed" | "cancelled" | "expired" | "initiated";
   startDate: Date | null;
   endDate: Date | null;
   transactionId?: string | null;
@@ -26,9 +28,16 @@ const userPlanSchema = new mongoose.Schema(
       ref: "pricePlan",
       required: true,
     },
+    stripeProductId: {
+      type: String,
+    },
+    autoPayment: {
+      type: Boolean,
+      default: true,
+    },
     paymentStatus: {
       type: String,
-      enum: ["pending", "success", "failed"],
+      enum: ["pending", "success", "failed", "cancelled" , "expired" , "initiated"],
       default: "pending",
       required: true,
     },
