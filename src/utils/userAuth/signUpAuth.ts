@@ -48,7 +48,7 @@ export const hashPasswordIfEmailAuth = async (userData: UserDocument, authType: 
 };
 
 export const sendOTPIfNeeded = async (userData: UserDocument, authType: string) => {
-  if (["Email", "Whatsapp"].includes(authType)) {
+  if (["Email"].includes(authType)) {
     await generateAndSendOTP(authType === "Email" ? { email: userData.email } : { phoneNumber: `${userData.countryCode}${userData.phoneNumber}` });
   }
 };
@@ -66,13 +66,6 @@ export const validateUserForLogin = async (user: any, authType: string, userData
   if (authType === "Email" && user.emailVerified === false) {
     await sendOTPIfNeeded(userData, authType);
     return errorResponseHandler("Email not verified, verfication email sent to your email", httpStatusCode.BAD_REQUEST, res);
-  }
-  if (authType === "Whatsapp" && user.whatsappNumberVerified === false) {
-    return errorResponseHandler(`Try login from ${user.authType}`, httpStatusCode.BAD_REQUEST, res);
-  }
-  if (authType === "Whatsapp" && !user.whatsappNumberVerified) {
-    await sendOTPIfNeeded(userData, authType);
-    return errorResponseHandler("Number is not verified, verfication otp sent to your number", httpStatusCode.BAD_REQUEST, res);
   }
   return null;
 };

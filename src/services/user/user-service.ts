@@ -288,7 +288,7 @@ export const myPlanService = async (req: Request, res: Response) => {
     userPlanModel
       .findOne({
         userId: userData.id,
-        paymentStatus: "success",
+        // paymentStatus: "success",
         startDate: { $lte: currentDate },
         endDate: { $gte: currentDate },
       })
