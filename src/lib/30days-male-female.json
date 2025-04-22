@@ -1,0 +1,1998 @@
+[
+    {
+      "plan_type": "Men",
+      "day": 1,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3 large eggs, scrambled with 1 tbsp olive oil",
+            "1 avocado",
+            "1 cup mixed greens with 2 tbsp balsamic dressing",
+            "2 small gluten-free corn tortillas"
+          ],
+          "calories": "~550 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 large apple",
+            "3 tbsp almond butter"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked lentils (seasoned with herbs)",
+            "1 cup cooked quinoa",
+            "1.5 cups roasted vegetables (zucchini, bell peppers) with 2 tbsp olive oil"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1650 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 2,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat Greek yogurt",
+            "1/2 cup gluten-free granola (certified gluten-free oats or rice-based)",
+            "1 cup mixed berries"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) almonds",
+            "2 oz cheddar cheese"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled tofu (marinated in gluten-free tamari)",
+            "1.5 cups steamed broccoli",
+            "1 cup brown rice",
+            "1 tbsp sesame seeds"
+          ],
+          "calories": "~700 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 3,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3-egg omelette with 1/3 cup diced tomatoes, 75g feta",
+            "1.5 cups sautéed spinach",
+            "2 small gluten-free rice cakes"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 large banana",
+            "2 tbsp peanut butter"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked chickpeas (spiced with cumin)",
+            "1.5 cups roasted sweet potato",
+            "1 cup mixed greens with 3 tbsp olive oil, lemon dressing"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 4,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "Smoothie (1.5 cups unsweetened almond milk, 1 banana, 1 cup spinach, 2 tbsp chia seeds, 2 tbsp almond butter)"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1.5 cups baby carrots",
+            "3 tbsp hummus (gluten-free certified)"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled paneer",
+            "1.5 cups sautéed mushrooms",
+            "1 cup cooked buckwheat",
+            "1.5 cups steamed green beans"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1500 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 5,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat cottage cheese",
+            "1 cup pineapple chunks",
+            "2 tbsp sunflower seeds"
+          ],
+          "calories": "~450 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) walnuts",
+            "1 large orange"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked black beans (with garlic, onion)",
+            "1 cup cooked millet",
+            "1.5 cups roasted zucchini with 2 tbsp olive oil"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 6,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3 fried eggs (in 1 tbsp olive oil)",
+            "1 avocado",
+            "2 small gluten-free corn tortillas"
+          ],
+          "calories": "~550 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1.5 cups sliced cucumber",
+            "3 tbsp tzatziki (gluten-free certified)"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g baked tempeh (marinated in gluten-free tamari)",
+            "1.5 cups steamed kale",
+            "1 cup cooked quinoa",
+            "2 tbsp tahini dressing"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1500 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 7,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat Greek yogurt",
+            "1/2 cup gluten-free granola",
+            "1 cup strawberries"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) cashews",
+            "2 oz mozzarella string cheese"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked kidney beans (spiced with paprika)",
+            "1.5 cups roasted Brussels sprouts with 2 tbsp olive oil",
+            "1 cup brown rice"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1600 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 8,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3-egg omelette with 1/3 cup diced bell peppers, 75g mozzarella",
+            "1.5 cups sautéed spinach",
+            "2 small gluten-free rice cakes"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 large pear",
+            "2 tbsp almond butter"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled halloumi",
+            "1.5 cups steamed asparagus",
+            "1 cup cooked buckwheat",
+            "2 tbsp olive oil drizzle"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 9,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat cottage cheese",
+            "1 cup mango chunks",
+            "2 tbsp chia seeds"
+          ],
+          "calories": "~450 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) pistachios",
+            "2 oz cheddar cheese"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked lentils (with herbs)",
+            "1.5 cups roasted carrots with 2 tbsp olive oil",
+            "1 cup cooked quinoa"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 10,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "Smoothie (1.5 cups unsweetened almond milk, 1 banana, 1 cup spinach, 2 tbsp flaxseeds, 2 tbsp almond butter)"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1.5 cups grapes",
+            "2 tbsp peanut butter"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled tofu (marinated in gluten-free tamari)",
+            "1.5 cups steamed green beans",
+            "1 cup brown rice",
+            "2 tbsp sesame seeds"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1600 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 11,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3 fried eggs (in 1 tbsp olive oil)",
+            "1 avocado",
+            "2 small gluten-free corn tortillas"
+          ],
+          "calories": "~550 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) almonds",
+            "1 large apple"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked chickpeas (with garlic, lemon)",
+            "1.5 cups roasted eggplant with 2 tbsp olive oil",
+            "1 cup cooked millet"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1600 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 12,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat Greek yogurt",
+            "1/2 cup gluten-free granola",
+            "1 cup blueberries"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1.5 cups baby carrots",
+            "3 tbsp hummus (gluten-free certified)"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled paneer",
+            "1.5 cups sautéed mushrooms",
+            "1 cup cooked buckwheat",
+            "1.5 cups steamed broccoli"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1500 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 13,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3-egg omelette with 1/3 cup diced tomatoes, 75g feta",
+            "1.5 cups sautéed kale",
+            "2 small gluten-free rice cakes"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) walnuts",
+            "2 oz mozzarella string cheese"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked black beans (with cumin, onion)",
+            "1.5 cups roasted sweet potato",
+            "1 cup mixed greens with 3 tbsp olive oil, lemon dressing"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1600 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 14,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat cottage cheese",
+            "1 cup pineapple chunks",
+            "2 tbsp sunflower seeds"
+          ],
+          "calories": "~450 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 large orange",
+            "2 tbsp peanut butter"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g baked tempeh (marinated in gluten-free tamari)",
+            "1.5 cups steamed spinach",
+            "1 cup cooked quinoa",
+            "2 tbsp tahini dressing"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1500 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 15,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3 fried eggs (in 1 tbsp olive oil)",
+            "1 avocado",
+            "2 small gluten-free corn tortillas"
+          ],
+          "calories": "~550 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) cashews",
+            "2 oz cheddar cheese"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked kidney beans (spiced with paprika)",
+            "1.5 cups roasted Brussels sprouts with 2 tbsp olive oil",
+            "1 cup brown rice"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1650 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 16,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat Greek yogurt",
+            "1/2 cup gluten-free granola",
+            "1 cup strawberries"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 large pear",
+            "2 tbsp almond butter"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled halloumi",
+            "1.5 cups steamed asparagus",
+            "1 cup cooked buckwheat",
+            "2 tbsp olive oil drizzle"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 17,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "Smoothie (1.5 cups unsweetened almond milk, 1 banana, 1 cup spinach, 2 tbsp chia seeds, 2 tbsp almond butter)"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1.5 cups grapes",
+            "2 tbsp peanut butter"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked lentils (with herbs)",
+            "1.5 cups roasted carrots with 2 tbsp olive oil",
+            "1 cup cooked quinoa"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1600 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 18,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3-egg omelette with 1/3 cup diced bell peppers, 75g mozzarella",
+            "1.5 cups sautéed spinach",
+            "2 small gluten-free rice cakes"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) almonds",
+            "1 large apple"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled tofu (marinated in gluten-free tamari)",
+            "1.5 cups steamed green beans",
+            "1 cup brown rice",
+            "2 tbsp sesame seeds"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 19,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat cottage cheese",
+            "1 cup mango chunks",
+            "2 tbsp chia seeds"
+          ],
+          "calories": "~450 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) pistachios",
+            "2 oz cheddar cheese"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked chickpeas (with garlic, lemon)",
+            "1.5 cups roasted eggplant with 2 tbsp olive oil",
+            "1 cup cooked millet"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 20,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3 fried eggs (in 1 tbsp olive oil)",
+            "1 avocado",
+            "2 small gluten-free corn tortillas"
+          ],
+          "calories": "~550 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1.5 cups baby carrots",
+            "3 tbsp hummus (gluten-free certified)"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled paneer",
+            "1.5 cups sautéed mushrooms",
+            "1 cup cooked buckwheat",
+            "1.5 cups steamed broccoli"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 21,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat Greek yogurt",
+            "1/2 cup gluten-free granola",
+            "1 cup blueberries"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 large orange",
+            "2 tbsp peanut butter"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked black beans (with cumin, onion)",
+            "1.5 cups roasted sweet potato",
+            "1 cup mixed greens with 3 tbsp olive oil, lemon dressing"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 22,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3-egg omelette with 1/3 cup diced tomatoes, 75g feta",
+            "1.5 cups sautéed kale",
+            "2 small gluten-free rice cakes"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) walnuts",
+            "2 oz mozzarella string cheese"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g baked tempeh (marinated in gluten-free tamari)",
+            "1.5 cups steamed spinach",
+            "1 cup cooked quinoa",
+            "2 tbsp tahini dressing"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1600 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 23,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat cottage cheese",
+            "1 cup pineapple chunks",
+            "2 tbsp sunflower seeds"
+          ],
+          "calories": "~450 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 large pear",
+            "2 tbsp almond butter"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked kidney beans (spiced with paprika)",
+            "1.5 cups roasted Brussels sprouts with 2 tbsp olive oil",
+            "1 cup brown rice"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1500 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 24,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "Smoothie (1.5 cups unsweetened almond milk, 1 banana, 1 cup spinach, 2 tbsp flaxseeds, 2 tbsp almond butter)"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1.5 cups grapes",
+            "2 tbsp peanut butter"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled halloumi",
+            "1.5 cups steamed asparagus",
+            "1 cup cooked buckwheat",
+            "2 tbsp olive oil drizzle"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1600 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 25,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3 fried eggs (in 1 tbsp olive oil)",
+            "1 avocado",
+            "2 small gluten-free corn tortillas"
+          ],
+          "calories": "~550 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) almonds",
+            "1 large apple"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked lentils (with herbs)",
+            "1.5 cups roasted carrots with 2 tbsp olive oil",
+            "1 cup cooked quinoa"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1600 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 26,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat Greek yogurt",
+            "1/2 cup gluten-free granola",
+            "1 cup strawberries"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1.5 cups baby carrots",
+            "3 tbsp hummus (gluten-free certified)"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled tofu (marinated in gluten-free tamari)",
+            "1.5 cups steamed green beans",
+            "1 cup brown rice",
+            "2 tbsp sesame seeds"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1500 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 27,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3-egg omelette with 1/3 cup diced bell peppers, 75g mozzarella",
+            "1.5 cups sautéed spinach",
+            "2 small gluten-free rice cakes"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) pistachios",
+            "2 oz cheddar cheese"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked chickpeas (with garlic, lemon)",
+            "1.5 cups roasted eggplant with 2 tbsp olive oil",
+            "1 cup cooked millet"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1600 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 28,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat cottage cheese",
+            "1 cup mango chunks",
+            "2 tbsp chia seeds"
+          ],
+          "calories": "~450 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 large orange",
+            "2 tbsp peanut butter"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g grilled paneer",
+            "1.5 cups sautéed mushrooms",
+            "1 cup cooked buckwheat",
+            "1.5 cups steamed broccoli"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1500 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 29,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "3 fried eggs (in 1 tbsp olive oil)",
+            "1 avocado",
+            "2 small gluten-free corn tortillas"
+          ],
+          "calories": "~550 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (40g) walnuts",
+            "2 oz mozzarella string cheese"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1.5 cups cooked black beans (with cumin, onion)",
+            "1.5 cups roasted sweet potato",
+            "1 cup mixed greens with 3 tbsp olive oil, lemon dressing"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1650 kcal"
+    },
+    {
+      "plan_type": "Men",
+      "day": 30,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "150g full-fat Greek yogurt",
+            "1/2 cup gluten-free granola",
+            "1 cup blueberries"
+          ],
+          "calories": "~500 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 large pear",
+            "2 tbsp almond butter"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "150g baked tempeh (marinated in gluten-free tamari)",
+            "1.5 cups steamed kale",
+            "1 cup cooked quinoa",
+            "2 tbsp tahini dressing"
+          ],
+          "calories": "~750 kcal"
+        }
+      ],
+      "total_calories": "~1550 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 1,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2 large eggs, scrambled with 1 tsp olive oil",
+            "1/2 avocado",
+            "1 cup mixed greens with 1 tbsp balsamic dressing",
+            "1 small gluten-free corn tortilla"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 medium apple",
+            "2 tbsp almond butter"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked lentils (seasoned with herbs)",
+            "1/2 cup cooked quinoa",
+            "1 cup roasted vegetables (zucchini, bell peppers) with 1 tbsp olive oil"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1150 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 2,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat Greek yogurt",
+            "1/4 cup gluten-free granola (certified gluten-free oats or rice-based)",
+            "1/2 cup mixed berries"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (30g) almonds",
+            "1 oz cheddar cheese"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled tofu (marinated in gluten-free tamari)",
+            "1 cup steamed broccoli",
+            "1/2 cup brown rice",
+            "1 tbsp sesame seeds"
+          ],
+          "calories": "~500 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 3,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2-egg omelette with 1/4 cup diced tomatoes, 50g feta",
+            "1 cup sautéed spinach",
+            "1 small gluten-free rice cake"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 banana",
+            "1 tbsp peanut butter"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked chickpeas (spiced with cumin)",
+            "1 cup roasted sweet potato",
+            "1 cup mixed greens with 2 tbsp olive oil, lemon dressing"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 4,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "Smoothie (1 cup unsweetened almond milk, 1 banana, 1/2 cup spinach, 1 tbsp chia seeds, 1 tbsp almond butter)"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 cup baby carrots",
+            "2 tbsp hummus (gluten-free certified)"
+          ],
+          "calories": "~150 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled paneer",
+            "1 cup sautéed mushrooms",
+            "1/2 cup cooked buckwheat",
+            "1 cup steamed green beans"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1050 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 5,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat cottage cheese",
+            "1/2 cup pineapple chunks",
+            "1 tbsp sunflower seeds"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (25g) walnuts",
+            "1 medium orange"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked black beans (with garlic, onion)",
+            "1/2 cup cooked millet",
+            "1 cup roasted zucchini with 1 tbsp olive oil"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 6,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2 fried eggs (in 1 tsp olive oil)",
+            "1/2 avocado",
+            "1 small gluten-free corn tortilla"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 cup sliced cucumber",
+            "2 tbsp tzatziki (gluten-free certified)"
+          ],
+          "calories": "~150 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g baked tempeh (marinated in gluten-free tamari)",
+            "1 cup steamed kale",
+            "1/2 cup cooked quinoa",
+            "1 tbsp tahini dressing"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1050 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 7,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat Greek yogurt",
+            "1/4 cup gluten-free granola",
+            "1/2 cup strawberries"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (30g) cashews",
+            "1 oz mozzarella string cheese"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked kidney beans (spiced with paprika)",
+            "1 cup roasted Brussels sprouts with 1 tbsp olive oil",
+            "1/2 cup brown rice"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1150 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 8,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2-egg omelette with 1/4 cup diced bell peppers, 50g mozzarella",
+            "1 cup sautéed spinach",
+            "1 small gluten-free rice cake"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 medium pear",
+            "2 tbsp almond butter"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled halloumi",
+            "1 cup steamed asparagus",
+            "1/2 cup cooked buckwheat",
+            "1 tbsp olive oil drizzle"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1150 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 9,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat cottage cheese",
+            "1/2 cup mango chunks",
+            "1 tbsp chia seeds"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (30g) pistachios",
+            "1 oz cheddar cheese"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked lentils (with herbs)",
+            "1 cup roasted carrots with 1 tbsp olive oil",
+            "1/2 cup cooked quinoa"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 10,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "Smoothie (1 cup unsweetened almond milk, 1 banana, 1/2 cup spinach, 1 tbsp flaxseeds, 1 tbsp almond butter)"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 cup grapes",
+            "1 tbsp peanut butter"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled tofu (marinated in gluten-free tamari)",
+            "1 cup steamed green beans",
+            "1/2 cup brown rice",
+            "1 tbsp sesame seeds"
+          ],
+          "calories": "~500 kcal"
+        }
+      ],
+      "total_calories": "~1050 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 11,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2 fried eggs (in 1 tsp olive oil)",
+            "1/2 avocado",
+            "1 small gluten-free corn tortilla"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (25g) almonds",
+            "1 medium apple"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked chickpeas (with garlic, lemon)",
+            "1 cup roasted eggplant with 1 tbsp olive oil",
+            "1/2 cup cooked millet"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 12,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat Greek yogurt",
+            "1/4 cup gluten-free granola",
+            "1/2 cup blueberries"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 cup baby carrots",
+            "2 tbsp hummus (gluten-free certified)"
+          ],
+          "calories": "~150 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled paneer",
+            "1 cup sautéed mushrooms",
+            "1/2 cup cooked buckwheat",
+            "1 cup steamed broccoli"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1050 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 13,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2-egg omelette with 1/4 cup diced tomatoes, 50g feta",
+            "1 cup sautéed kale",
+            "1 small gluten-free rice cake"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (30g) walnuts",
+            "1 oz mozzarella string cheese"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked black beans (with cumin, onion)",
+            "1 cup roasted sweet potato",
+            "1 cup mixed greens with 2 tbsp olive oil, lemon dressing"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1150 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 14,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat cottage cheese",
+            "1/2 cup pineapple chunks",
+            "1 tbsp sunflower seeds"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 medium orange",
+            "1 tbsp peanut butter"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g baked tempeh (marinated in gluten-free tamari)",
+            "1 cup steamed spinach",
+            "1/2 cup cooked quinoa",
+            "1 tbsp tahini dressing"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1050 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 15,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2 fried eggs (in 1 tsp olive oil)",
+            "1/2 avocado",
+            "1 small gluten-free corn tortilla"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (30g) cashews",
+            "1 oz cheddar cheese"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked kidney beans (spiced with paprika)",
+            "1 cup roasted Brussels sprouts with 1 tbsp olive oil",
+            "1/2 cup brown rice"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1150 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 16,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat Greek yogurt",
+            "1/4 cup gluten-free granola",
+            "1/2 cup strawberries"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 medium pear",
+            "2 tbsp almond butter"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled halloumi",
+            "1 cup steamed asparagus",
+            "1/2 cup cooked buckwheat",
+            "1 tbsp olive oil drizzle"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1150 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 17,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "Smoothie (1 cup unsweetened almond milk, 1 banana, 1/2 cup spinach, 1 tbsp chia seeds, 1 tbsp almond butter)"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 cup grapes",
+            "1 tbsp peanut butter"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked lentils (with herbs)",
+            "1 cup roasted carrots with 1 tbsp olive oil",
+            "1/2 cup cooked quinoa"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 18,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2-egg omelette with 1/4 cup diced bell peppers, 50g mozzarella",
+            "1 cup sautéed spinach",
+            "1 small gluten-free rice cake"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (25g) almonds",
+            "1 medium apple"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled tofu (marinated in gluten-free tamari)",
+            "1 cup steamed green beans",
+            "1/2 cup brown rice",
+            "1 tbsp sesame seeds"
+          ],
+          "calories": "~500 kcal"
+        }
+      ],
+      "total_calories": "~1050 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 19,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat cottage cheese",
+            "1/2 cup mango chunks",
+            "1 tbsp chia seeds"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (30g) pistachios",
+            "1 oz cheddar cheese"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked chickpeas (with garlic, lemon)",
+            "1 cup roasted eggplant with 1 tbsp olive oil",
+            "1/2 cup cooked millet"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 20,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2 fried eggs (in 1 tsp olive oil)",
+            "1/2 avocado",
+            "1 small gluten-free corn tortilla"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 cup baby carrots",
+            "2 tbsp hummus (gluten-free certified)"
+          ],
+          "calories": "~150 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled paneer",
+            "1 cup sautéed mushrooms",
+            "1/2 cup cooked buckwheat",
+            "1 cup steamed broccoli"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1050 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 21,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat Greek yogurt",
+            "1/4 cup gluten-free granola",
+            "1/2 cup blueberries"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 medium orange",
+            "1 tbsp peanut butter"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked black beans (with cumin, onion)",
+            "1 cup roasted sweet potato",
+            "1 cup mixed greens with 2 tbsp olive oil, lemon dressing"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 22,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2-egg omelette with 1/4 cup diced tomatoes, 50g feta",
+            "1 cup sautéed kale",
+            "1 small gluten-free rice cake"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (30g) walnuts",
+            "1 oz mozzarella string cheese"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g baked tempeh (marinated in gluten-free tamari)",
+            "1 cup steamed spinach",
+            "1/2 cup cooked quinoa",
+            "1 tbsp tahini dressing"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1150 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 23,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat cottage cheese",
+            "1/2 cup pineapple chunks",
+            "1 tbsp sunflower seeds"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 medium pear",
+            "2 tbsp almond butter"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked kidney beans (spiced with paprika)",
+            "1 cup roasted Brussels sprouts with 1 tbsp olive oil",
+            "1/2 cup brown rice"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 24,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "Smoothie (1 cup unsweetened almond milk, 1 banana, 1/2 cup spinach, 1 tbsp flaxseeds, 1 tbsp almond butter)"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 cup grapes",
+            "1 tbsp peanut butter"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled halloumi",
+            "1 cup steamed asparagus",
+            "1/2 cup cooked buckwheat",
+            "1 tbsp olive oil drizzle"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 25,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2 fried eggs (in 1 tsp olive oil)",
+            "1/2 avocado",
+            "1 small gluten-free corn tortilla"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (25g) almonds",
+            "1 medium apple"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked lentils (with herbs)",
+            "1 cup roasted carrots with 1 tbsp olive oil",
+            "1/2 cup cooked quinoa"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1100 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 26,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat Greek yogurt",
+            "1/4 cup gluten-free granola",
+            "1/2 cup strawberries"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 cup baby carrots",
+            "2 tbsp hummus (gluten-free certified)"
+          ],
+          "calories": "~150 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled tofu (marinated in gluten-free tamari)",
+            "1 cup steamed green beans",
+            "1/2 cup brown rice",
+            "1 tbsp sesame seeds"
+          ],
+          "calories": "~500 kcal"
+        }
+      ],
+      "total_calories": "~1000 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 27,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2-egg omelette with 1/4 cup diced bell peppers, 50g mozzarella",
+            "1 cup sautéed spinach",
+            "1 small gluten-free rice cake"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (30g) pistachios",
+            "1 oz cheddar cheese"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked chickpeas (with garlic, lemon)",
+            "1 cup roasted eggplant with 1 tbsp olive oil",
+            "1/2 cup cooked millet"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1150 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 28,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat cottage cheese",
+            "1/2 cup mango chunks",
+            "1 tbsp chia seeds"
+          ],
+          "calories": "~300 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 medium orange",
+            "1 tbsp peanut butter"
+          ],
+          "calories": "~200 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g grilled paneer",
+            "1 cup sautéed mushrooms",
+            "1/2 cup cooked buckwheat",
+            "1 cup steamed broccoli"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1050 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 29,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "2 fried eggs (in 1 tsp olive oil)",
+            "1/2 avocado",
+            "1 small gluten-free corn tortilla"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 handful (30g) walnuts",
+            "1 oz mozzarella string cheese"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "1 cup cooked black beans (with cumin, onion)",
+            "1 cup roasted sweet potato",
+            "1 cup mixed greens with 2 tbsp olive oil, lemon dressing"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1150 kcal"
+    },
+    {
+      "plan_type": "Women",
+      "day": 30,
+      "meals": [
+        {
+          "meal_time": "Meal 1 (12:00 PM - Main)",
+          "items": [
+            "100g full-fat Greek yogurt",
+            "1/4 cup gluten-free granola",
+            "1/2 cup blueberries"
+          ],
+          "calories": "~350 kcal"
+        },
+        {
+          "meal_time": "Meal 2 (3:00 PM - Snack)",
+          "items": [
+            "1 medium pear",
+            "2 tbsp almond butter"
+          ],
+          "calories": "~250 kcal"
+        },
+        {
+          "meal_time": "Meal 3 (7:00 PM - Main)",
+          "items": [
+            "100g baked tempeh (marinated in gluten-free tamari)",
+            "1 cup steamed kale",
+            "1/2 cup cooked quinoa",
+            "1 tbsp tahini dressing"
+          ],
+          "calories": "~550 kcal"
+        }
+      ],
+      "total_calories": "~1150 kcal"
+    }
+  ]

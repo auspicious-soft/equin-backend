@@ -9,6 +9,11 @@ import { waterTrackerModel } from "src/models/user/water-tracker-schema";
 import { userPlanModel } from "src/models/user-plan/user-plan-schema";
 import { essentialTipModel } from "src/models/admin/essential-tips-schema";
 import { pricePlanModel } from "src/models/admin/price-plan-schema";
+import { trackUserMealModel } from "src/models/user/track-user-meal";
+import { mealPlanModel30 } from "src/models/admin/30days-meal-plan-schema";
+
+import bcrypt from "bcryptjs";
+
 
 configDotenv();
 
@@ -32,7 +37,7 @@ const sanitizeUser = (user: any): UserDocument => {
 
 //*****************************FOR EQUIN APP *********************************/
 
-//Home Page APIS
+//*************Home Page APIS
 
 export const userHomeService = async (req: Request, res: Response) => {
   const userData = req.user as any;
@@ -278,21 +283,24 @@ export const waterTracketService = async (req: Request, res: Response) => {
   };
 };
 
-//My Plan Page APIS
+//*************My Plan Page APIS
 
 export const myPlanService = async (req: Request, res: Response) => {
   const userData = req.user as any;
   const currentDate = new Date();
 
+  let mealTracking;
+  let mealPlan;
+
   const [activePlan, essentialTips] = await Promise.all([
     userPlanModel
       .findOne({
         userId: userData.id,
-        // paymentStatus: "success",
         startDate: { $lte: currentDate },
         endDate: { $gte: currentDate },
       })
-      .populate("planId"),
+      .populate("planId")
+      .lean(),
 
     essentialTipModel
       .find({
@@ -303,14 +311,156 @@ export const myPlanService = async (req: Request, res: Response) => {
       .limit(5),
   ]);
 
+  if (activePlan) {
+    const checkMealTracker = await trackUserMealModel.find({
+      userId: userData.id,
+    });
+
+    if (checkMealTracker.length === 0) {
+      // Get the meal plan based on user's gender
+      const mealPlans = await mealPlanModel30.find({
+        plan_type: userData.gender === "Male" ? "Men" : "Women",
+      });
+
+      // Calculate total days between start and end date
+      const startDate = new Date(activePlan.startDate || currentDate);
+      const endDate = new Date(activePlan.endDate || currentDate);
+      const totalDays = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
+      );
+
+      // Create bulk entries array
+      const bulkEntries = [];
+
+      // Loop through each day from start to end date
+      for (let i = 0; i < totalDays; i++) {
+        const currentDate = new Date(startDate);
+        currentDate.setDate(startDate.getDate() + i);
+
+        // Get the corresponding meal plan (cycling through 30 days)
+        const dayIndex = i % 30; // This will cycle from 0 to 29
+        const mealPlan = mealPlans.find((plan) => plan.day === dayIndex + 1);
+
+        if (mealPlan) {
+          bulkEntries.push({
+            userId: userData.id,
+            planId: mealPlan._id,
+            planDay: currentDate,
+          });
+        }
+      }
+
+      if (bulkEntries.length > 0) {
+        await trackUserMealModel.insertMany(bulkEntries);
+      }
+    }
+    // Get today's date at midnight for accurate comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(today.getDate() - 2);
+
+    const twoDaysAhead = new Date(today);
+    twoDaysAhead.setDate(today.getDate() + 2);
+
+    // Find records within the 5-day range
+    const fiveDayMealTracker = await trackUserMealModel
+      .find({
+        userId: userData.id,
+        planDay: {
+          $gte: twoDaysAgo,
+          $lte: twoDaysAhead,
+        },
+      })
+      .sort({ planDay: 1 })
+      .populate("planId");
+
+    mealTracking = fiveDayMealTracker;
+  } else {
+    mealTracking = null;
+    mealPlan = await pricePlanModel.find();
+  }
+
   return {
     success: true,
     message: activePlan ? "Active plan found" : "No active plan found",
     data: {
-      hasActivePlan: !!activePlan,
-      plan: activePlan,
+      hasActivePlan: mealTracking ? true : false,
+      plan: mealTracking || mealPlan,
       essentialTips,
     },
+  };
+};
+
+export const updateMealTrackerService = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const { mealId, finishedMeal, data } = req.body;
+
+  if (!data.carbs || !data.protein || !data.fat || !data.status) {
+    return errorResponseHandler(
+      "Invalid payload",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Validate payload
+  if (!mealId || !finishedMeal) {
+    return errorResponseHandler(
+      "mealId and finishedMeal are required",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Validate finishedMeal value
+  const validMealTypes = ["first", "second", "third", "other"];
+  if (!validMealTypes.includes(finishedMeal)) {
+    return errorResponseHandler(
+      "finishedMeal must be one of: first, second, third",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Get today's date at midnight for accurate comparison
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Create the update object dynamically
+  const updateField = `${finishedMeal}MealStatus`;
+
+  // Find and update the meal tracking record
+  const updatedMeal = await trackUserMealModel
+    .findOneAndUpdate(
+      {
+        userId: userData.id,
+        _id: mealId,
+        planDay: {
+          $gte: today,
+          $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000), // Less than tomorrow
+        },
+      },
+      {
+        $set: { [updateField]: data },
+      },
+      { new: true }
+    )
+    .populate("planId");
+
+  if (!updatedMeal) {
+    return errorResponseHandler(
+      "No meal tracking record found for today",
+      httpStatusCode.NOT_FOUND,
+      res
+    );
+  }
+
+  return {
+    success: true,
+    message: "Meal status updated successfully",
+    data: updatedMeal,
   };
 };
 
@@ -355,9 +505,9 @@ export const savePricePlanServices = async (req: Request, res: Response) => {
     planId: planId,
     stripeProductId: pricePlan.productId,
     paymentStatus: "pending",
-    startDate: null, 
-    endDate: null, 
-    transactionId: null, 
+    startDate: null,
+    endDate: null,
+    transactionId: null,
     paymentMethod: null,
   });
 
@@ -369,10 +519,302 @@ export const savePricePlanServices = async (req: Request, res: Response) => {
       priceInfo: {
         amount: pricePlan.price,
         currency: "usd",
-        duration: `${pricePlan.months} months`
-      }
-    }
+        duration: `${pricePlan.months} months`,
+      },
+    },
   };
 };
+
+//**************User Settings
+
+export const getUserSettingsService = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const user = await usersModel
+    .findById(userData.id)
+    .select("fullName email phoneNumber _id profilePic")
+    .lean();
+
+  const otherDetails = await healthDataModel.findOne({ userId: userData.id });
+
+  if (!user) {
+    return errorResponseHandler(
+      "User not found",
+      httpStatusCode.NOT_FOUND,
+      res
+    );
+  }
+
+  const membership = await userPlanModel
+    .findOne({
+      userId: userData.id,
+      endDate: { $gte: new Date() },
+    })
+    .populate("planId")
+    .select("autoPayment startDate endDate")
+    .lean();
+
+  console.log(membership);
+
+  return {
+    success: true,
+    message: "User details retrieved successfully",
+    data: {
+      editProfile: { ...user, ...otherDetails?.otherDetails },
+      notification: false,
+      membership: membership ? membership : {},
+      language: {},
+    },
+  };
+};
+
+export const updateUserDetailsService = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const { gender, dob, age, height, weight, bmi, profilePic } = req.body;
+  await usersModel.findByIdAndUpdate(
+    userData.id,
+    { profilePic },
+    { new: true }
+  );
+
+  await healthDataModel.findOneAndUpdate(
+    { userId: userData.id },
+    { otherDetails: { gender, dob, age, height, weight, bmi } },
+    { upsert: true, new: true }
+  );
+
+  return {
+    success: true,
+    message: "Data updated successfully",
+  };
+};
+
+export const myProfileServices = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+
+  // Get health data for weight and BMI
+  const healthData = await healthDataModel
+    .findOne({
+      userId: userData.id,
+    })
+    .lean();
+
+  // Get all fasting records for the user
+  const fastingRecords = await fastingRecordModel
+    .find({
+      userId: userData.id,
+      isFasting: true,
+    })
+    .sort({ date: -1 })
+    .lean();
+
+  // Calculate total fasts
+  const totalFasts = fastingRecords.length;
+
+  // Calculate average of last 7 fasts in hours
+  const last7Fasts = fastingRecords.slice(0, 7);
+  const averageLast7Fasts = last7Fasts.length > 0
+    ? Math.round(
+        last7Fasts.reduce((sum, fast) => sum + (parseInt(fast.fastingHours?.toString() || '16')), 0) / 
+        last7Fasts.length
+      )
+    : 0;
+
+  // Find longest fast in hours
+  const longestFast = fastingRecords.length > 0
+    ? Math.max(...fastingRecords.map(fast => parseInt(fast.fastingHours?.toString() || '16')))
+    : 0;
+
+  // Calculate streaks
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let tempStreak = 0;
+
+  if (fastingRecords.length > 0) {
+    const today = new Date().toISOString().split('T')[0];
+    
+    for (let i = 0; i < fastingRecords.length; i++) {
+      const currentDate = new Date(fastingRecords[i].date);
+      const previousDate = i > 0 ? new Date(fastingRecords[i - 1].date) : null;
+      
+      if (i === 0 && currentDate.toISOString().split('T')[0] === today) {
+        tempStreak = 1;
+        currentStreak = 1;
+      } else if (previousDate) {
+        const diffDays = Math.floor(
+          (previousDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        
+        if (diffDays === 1) {
+          tempStreak++;
+          if (i === 0) {
+            currentStreak = tempStreak;
+          }
+        } else {
+          if (tempStreak > longestStreak) {
+            longestStreak = tempStreak;
+          }
+          tempStreak = 1;
+        }
+      }
+    }
+    
+    // Check one last time for the longest streak
+    if (tempStreak > longestStreak) {
+      longestStreak = tempStreak;
+    }
+  }
+
+  // Get recent fasts (last 5 records)
+  const recentFasts = fastingRecords.slice(0, 5).map(fast => ({
+    date: fast.date,
+    completed: true,
+    duration: parseInt(fast.fastingHours?.toString() || '16')
+  }));
+
+  return {
+    success: true,
+    message: "User details retrieved successfully",
+    data: {
+      totalFasts,
+      averageLast7Fasts,
+      longestFast,
+      longestStreak,
+      currentStreak,
+      weight: healthData?.otherDetails?.weight || 0,
+      bmi: healthData?.otherDetails?.bmi || 0,
+      recentFasts
+    },
+  };
+};
+
+export const getMealDateWiseServices = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const { date } = req.body;
+
+  if (!date) {
+    return errorResponseHandler(
+      "Date is required",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Convert date string to Date object
+  const queryDate = new Date(date);
+  queryDate.setHours(0, 0, 0, 0);
+
+  const endDate = new Date(date);
+  endDate.setHours(23, 59, 59, 999);
+
+  // Get meal information for the specified date
+  const meal = await trackUserMealModel
+    .findOne({
+      userId: userData.id,
+      planDay: {
+        $gte: queryDate,
+        $lte: endDate
+      }
+    })
+    .populate('planId')
+    .lean();
+
+  // Get water intake data for the specified date
+  const waterRecords = await waterTrackerModel.find({
+    userId: userData.id,
+    date: {
+      $gte: queryDate,
+      $lte: endDate
+    }
+  }).lean();
+
+  // Calculate total water intake for the day
+  const totalWaterIntake = waterRecords.reduce(
+    (sum, record) => sum + (record.waterIntake || 0),
+    0
+  );
+
+  // Get user's daily water intake goal
+  const healthData = await healthDataModel.findOne({
+    userId: userData.id
+  }).lean();
+
+  const waterIntake = {
+    consumed: totalWaterIntake,
+    goal: healthData?.waterIntakeGoal?.dailyGoal || 0,
+    progress: healthData?.waterIntakeGoal?.dailyGoal 
+      ? Math.round((totalWaterIntake / healthData.waterIntakeGoal.dailyGoal) * 100)
+      : 0,
+    unit: healthData?.waterIntakeGoal?.unit || 'ml',
+    containerType: healthData?.waterIntakeGoal?.containerType || 'glass',
+    containerSize: healthData?.waterIntakeGoal?.containerSize || 0
+  };
+
+  return {
+    success: true,
+    message: "User details retrieved successfully",
+    data: {
+      meal,
+      waterIntake
+    },
+  };
+}; 
+
+export const changePasswordServices = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return errorResponseHandler(
+      "Old password and new password are required",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Find user with password
+  const user = await usersModel.findById(userData.id).select("+password");
+  
+  if (!user) {
+    return errorResponseHandler(
+      "User not found",
+      httpStatusCode.NOT_FOUND,
+      res
+    );
+  }
+
+  // Check if user is using email authentication
+  if (user.authType !== "Email") {
+    return errorResponseHandler(
+      `Password cannot be changed. Please login with ${user.authType}`,
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Verify old password
+  const isPasswordValid = await bcrypt.compare(oldPassword, user?.password || "");
+  if (!isPasswordValid) {
+    return errorResponseHandler(
+      "Current password is incorrect",
+      httpStatusCode.UNAUTHORIZED,
+      res
+    );
+  }
+
+  // Hash new password
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Update password
+  await usersModel.findByIdAndUpdate(
+    userData.id,
+    { password: hashedPassword },
+    { new: true }
+  );
+
+  return {
+    success: true,
+    message: "Password updated successfully",
+  };
+}
 
 //*****************************FOR EQUIN APP *********************************/

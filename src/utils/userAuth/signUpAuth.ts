@@ -7,13 +7,16 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { configDotenv } from "dotenv";
 import { generateAndSendOTP } from "src/services/auth/auth-services";
+import { questionResponseModel } from "src/models/admin/question-response-schema";
 
 configDotenv();
 
-export const generateUserToken = (user: UserDocument) => {
+export const generateUserToken = async(user: UserDocument) => {
+  const userGender = await questionResponseModel.findOne({ userId: user._id, order:4});
   const tokenPayload = {
     id: user._id,
     role: user.role,
+    gender: userGender?.selectedOptionValues[0].gender,
     email: user.email || undefined,
     phoneNumber: user.phoneNumber || undefined,
   };

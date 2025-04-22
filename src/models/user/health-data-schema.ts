@@ -9,14 +9,21 @@ export interface HealthDataDocument extends Document {
     dailyGoal: number;
     waterReminder: boolean;
   };
+  otherDetails: any;
+  deviceId: string;
+  notification: boolean;
 }
 
 const healthDataSchema = new mongoose.Schema(
   {
+    deviceId: {
+      type: String,
+      default: null,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "users",
-      required: true,
+      default: null,
     },
     waterIntakeGoal: {
       containerType: {
@@ -41,6 +48,13 @@ const healthDataSchema = new mongoose.Schema(
         type: Boolean,
         default: false,
       },
+    },
+    otherDetails: {
+      type: Object,
+    },
+    notification: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }

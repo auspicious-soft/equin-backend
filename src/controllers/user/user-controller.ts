@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { httpStatusCode } from "../../lib/constant";
 import { errorParser } from "../../lib/errors/error-response-handler";
-import { fastingTodayService, myPlanService, savePricePlanServices, userHomeService, waterDataService, waterTracketService } from "src/services/user/user-service";
+import { changePasswordServices, fastingTodayService, getMealDateWiseServices, getUserSettingsService, myPlanService, myProfileServices, savePricePlanServices, updateMealTrackerService, updateUserDetailsService, userHomeService, waterDataService, waterTracketService } from "src/services/user/user-service";
 
 export const userHome = async (req: Request, res: Response) => {
   try {
@@ -61,6 +61,17 @@ export const myPlan = async (req: Request, res: Response) => {
       .json({ success: false, message: message || "An error occurred" });
   }
 };
+export const updateMealTracker = async (req: Request, res: Response) => {
+  try {
+    const response = await updateMealTrackerService(req, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
 
 
 export const savePricePlan = async (req: Request, res: Response) => {
@@ -74,4 +85,63 @@ export const savePricePlan = async (req: Request, res: Response) => {
       .json({ success: false, message: message || "An error occurred" });
   }
 };
+
+
+export const getUserSettings = async (req: Request, res: Response) => {
+  try {
+    const response = await getUserSettingsService(req, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+
+export const updateUserDetails = async (req: Request, res: Response) => {
+  try {
+    const response = await updateUserDetailsService(req, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const myProfile = async (req: Request, res: Response) => {
+  try {
+    const response = await myProfileServices(req, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const getMealDateWise = async (req: Request, res: Response) => {
+  try {
+    const response = await getMealDateWiseServices(req, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const response = await changePasswordServices(req, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+
 

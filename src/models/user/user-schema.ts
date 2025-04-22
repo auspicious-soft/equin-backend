@@ -116,6 +116,7 @@ const usersSchema = new mongoose.Schema<UserDocument>(
       type: String,
       default: null,
     },
+
   },
   { timestamps: true }
 );

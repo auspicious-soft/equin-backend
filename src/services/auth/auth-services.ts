@@ -27,6 +27,8 @@ import { passwordResetTokenModel } from "src/models/password-token-schema";
 import { generateOtpWithTwilio } from "src/utils/sms/sms";
 import { mealPlanModel } from "src/models/admin/meal-plan-schema";
 import { essentialTipModel } from "src/models/admin/essential-tips-schema";
+import { mealPlanModel30 } from "src/models/admin/30days-meal-plan-schema";
+import { healthDataModel } from "src/models/user/health-data-schema";
 configDotenv();
 
 const sanitizeUser = (user: any): UserDocument => {
@@ -55,6 +57,7 @@ export const createPlanServices = async (payload: any, res: Response) => {
 export const createMealPlanServices = async (payload: any, res: Response) => {
   console.log("payload", payload);
   // const result = await mealPlanModel.insertMany(payload.plans);
+  // const result = await mealPlanModel30.insertMany(payload);
   return {
     success: true,
     message: "Meal plans created successfully",
@@ -95,12 +98,20 @@ export const getPlanServices = async (payload: any, res: Response) => {
 export const saveAnswerServices = async (payload: any, res: Response) => {
   const { deviceId, questionId, selectedOptionValues, order } = payload;
 
-  if (!deviceId || !questionId || !selectedOptionValues) {
+  if (!deviceId || !questionId || !selectedOptionValues.length) {
     return errorResponseHandler(
       "Invalid payload",
       httpStatusCode.BAD_REQUEST,
       res
     );
+  }
+
+  if(order === 4){
+    await healthDataModel.create({
+      userId: null,
+      deviceId,
+      otherDetails: selectedOptionValues[0],
+    });
   }
 
   const session = await mongoose.startSession();
@@ -203,12 +214,17 @@ export const verifyOTPServices = async (payload: any) => {
   if (email) {
     user.emailVerified = true;
   }
-  user.token = generateUserToken(user as any);
+  user.token = await generateUserToken(user as any);
 
   await questionResponseModel.updateMany(
     { deviceId: user?.deviceId, userId: null },
     { $set: { userId: user?._id } },
     { multi: true }
+  );
+
+  await healthDataModel.updateOne(
+    {deviceId: user?.deviceId, userId: null },
+    { $set: { userId: user?._id } }
   );
 
   await userPlanModel.updateOne(
@@ -368,7 +384,7 @@ export const userSignInServices = async (
     if (passwordValidationResponse) return passwordValidationResponse;
   }
 
-  user.token = generateUserToken(user as any);
+  user.token = await generateUserToken(user as any);
 
   await user.save();
   return {

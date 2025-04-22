@@ -3,8 +3,7 @@ import mongoose, { Document } from "mongoose";
 export interface WaterTrackerDocument extends Document {
   userId: mongoose.Types.ObjectId;
   date: Date;
-  isFasting: boolean;
-  fastingHours?: number;
+  waterIntake?: number;
 }
 
 const waterTrackerSchema = new mongoose.Schema(
