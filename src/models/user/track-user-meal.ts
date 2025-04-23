@@ -2,7 +2,7 @@ import mongoose, { Document } from "mongoose";
 
 export interface TrackUserMealDocument extends Document {
   userId: mongoose.Types.ObjectId;
-  planId: mongoose.Types.ObjectId;
+  planId: mongoose.Types.ObjectId | null;
   firstMealStatus: any;
   secondMealStatus: any;
   thirdMealStatus: any;
@@ -20,7 +20,7 @@ const trackUserMealSchema = new mongoose.Schema(
     planId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "MealPlan30Days",
-      required: true,
+      default: null,
     },
     firstMealStatus: {
       carbs: {

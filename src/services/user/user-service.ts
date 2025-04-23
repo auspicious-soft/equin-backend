@@ -11,6 +11,7 @@ import { essentialTipModel } from "src/models/admin/essential-tips-schema";
 import { pricePlanModel } from "src/models/admin/price-plan-schema";
 import { trackUserMealModel } from "src/models/user/track-user-meal";
 import { mealPlanModel30 } from "src/models/admin/30days-meal-plan-schema";
+import { createSecurityNotification } from '../admin/notification-service';
 
 import bcrypt from "bcryptjs";
 
@@ -235,8 +236,8 @@ export const waterDataService = async (req: Request, res: Response) => {
           containerType,
           containerSize,
           dailyGoal,
-          waterReminder: waterReminder,
         },
+        waterReminder: waterReminder
       },
       { new: true }
     );
@@ -248,8 +249,8 @@ export const waterDataService = async (req: Request, res: Response) => {
         containerType,
         containerSize,
         dailyGoal,
-        waterReminder: waterReminder,
       },
+      waterReminder: waterReminder,
     });
   }
 
@@ -268,6 +269,16 @@ export const waterTracketService = async (req: Request, res: Response) => {
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date();
+
+  const waterData = await healthDataModel.findOne({ userId: userData.id });
+
+  if (!waterData?.waterIntakeGoal?.dailyGoal) {
+    return errorResponseHandler(
+      "Water intake goal not set",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
 
   // Create new fasting record for today
   const fastingRecord = await waterTrackerModel.create({
@@ -393,6 +404,121 @@ export const myPlanService = async (req: Request, res: Response) => {
   };
 };
 
+export const savePricePlanServices = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const { planId } = req.body;
+
+  if (!planId) {
+    return errorResponseHandler(
+      "Invalid payload",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  const pricePlan = await pricePlanModel.findById(planId);
+  if (!pricePlan) {
+    return errorResponseHandler(
+      "Invalid planId",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  const existingActivePlan = await userPlanModel.findOne({
+    userId: userData.id,
+    planId: planId,
+    endDate: { $gte: new Date() },
+    paymentStatus: "success",
+  });
+
+  if (existingActivePlan) {
+    return errorResponseHandler(
+      `Active plan already exists till ${existingActivePlan.endDate}`,
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  const result = await userPlanModel.create({
+    userId: userData.id,
+    planId: planId,
+    stripeProductId: pricePlan.productId,
+    paymentStatus: "pending",
+    startDate: null,
+    endDate: null,
+    transactionId: null,
+    paymentMethod: null,
+  });
+
+  return {
+    success: true,
+    message: "Plan initialized successfully",
+    data: {
+      planDetails: result,
+      priceInfo: {
+        amount: pricePlan.price,
+        currency: "usd",
+        duration: `${pricePlan.months} months`,
+      },
+    },
+  };
+};
+
+//**************Nutrition Page
+
+export const nutritionServices = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const currentDate = new Date();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Check for active plan
+  const activePlan = await userPlanModel.findOne({
+    userId: userData.id,
+    startDate: { $lte: currentDate },
+    endDate: { $gte: currentDate },
+  }).populate("planId").lean();
+
+  let todayMeal;
+
+  if(activePlan){
+    todayMeal = await trackUserMealModel.findOne({
+      userId: userData.id,
+      planDay: {
+        $gte: today,
+        $lt: tomorrow
+      }
+    }).lean();
+
+  }else{
+    todayMeal = await trackUserMealModel.findOne({
+      userId: userData.id,
+      planDay: {
+        $gte: today,
+        $lt: tomorrow
+      }
+    }).lean();
+
+    if(!todayMeal){
+      todayMeal = await trackUserMealModel.create({
+        userId: userData.id,
+        planDay: today
+      })
+    }
+  }
+
+  return {
+    success: true,
+    message: "Nutrition data retrieved successfully",
+    data: {
+      todayMeal,
+    },
+  };
+};
+
 export const updateMealTrackerService = async (req: Request, res: Response) => {
   const userData = req.user as any;
   const { mealId, finishedMeal, data } = req.body;
@@ -464,67 +590,6 @@ export const updateMealTrackerService = async (req: Request, res: Response) => {
   };
 };
 
-export const savePricePlanServices = async (req: Request, res: Response) => {
-  const userData = req.user as any;
-  const { planId } = req.body;
-
-  if (!planId) {
-    return errorResponseHandler(
-      "Invalid payload",
-      httpStatusCode.BAD_REQUEST,
-      res
-    );
-  }
-
-  const pricePlan = await pricePlanModel.findById(planId);
-  if (!pricePlan) {
-    return errorResponseHandler(
-      "Invalid planId",
-      httpStatusCode.BAD_REQUEST,
-      res
-    );
-  }
-
-  const existingActivePlan = await userPlanModel.findOne({
-    userId: userData.id,
-    planId: planId,
-    endDate: { $gte: new Date() },
-    paymentStatus: "success",
-  });
-
-  if (existingActivePlan) {
-    return errorResponseHandler(
-      `Active plan already exists till ${existingActivePlan.endDate}`,
-      httpStatusCode.BAD_REQUEST,
-      res
-    );
-  }
-
-  const result = await userPlanModel.create({
-    userId: userData.id,
-    planId: planId,
-    stripeProductId: pricePlan.productId,
-    paymentStatus: "pending",
-    startDate: null,
-    endDate: null,
-    transactionId: null,
-    paymentMethod: null,
-  });
-
-  return {
-    success: true,
-    message: "Plan initialized successfully",
-    data: {
-      planDetails: result,
-      priceInfo: {
-        amount: pricePlan.price,
-        currency: "usd",
-        duration: `${pricePlan.months} months`,
-      },
-    },
-  };
-};
-
 //**************User Settings
 
 export const getUserSettingsService = async (req: Request, res: Response) => {
@@ -562,7 +627,7 @@ export const getUserSettingsService = async (req: Request, res: Response) => {
       editProfile: { ...user, ...otherDetails?.otherDetails },
       notification: false,
       membership: membership ? membership : {},
-      language: {},
+      language: otherDetails?.Language,
     },
   };
 };
@@ -792,8 +857,16 @@ export const changePasswordServices = async (req: Request, res: Response) => {
   }
 
   // Verify old password
-  const isPasswordValid = await bcrypt.compare(oldPassword, user?.password || "");
+  const isPasswordValid = await bcrypt.compare(oldPassword, user.password || "");
   if (!isPasswordValid) {
+    // Create notification for failed password change attempt
+    await createSecurityNotification({
+      userId: userData.id,
+      title: "Failed Password Change Attempt",
+      message: "There was an unsuccessful attempt to change your password. If this wasn't you, please secure your account.",
+      deviceId: user?.deviceId || "", // Assuming you store device ID in user model
+    });
+
     return errorResponseHandler(
       "Current password is incorrect",
       httpStatusCode.UNAUTHORIZED,
@@ -810,6 +883,14 @@ export const changePasswordServices = async (req: Request, res: Response) => {
     { password: hashedPassword },
     { new: true }
   );
+
+  // Create success notification
+  await createSecurityNotification({
+    userId: userData.id,
+    title: "Password Changed Successfully",
+    message: "Your password was successfully changed. If you didn't make this change, please contact support immediately.",
+    deviceId: user?.deviceId || "",
+  });
 
   return {
     success: true,

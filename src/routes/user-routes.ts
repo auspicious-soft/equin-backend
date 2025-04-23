@@ -7,6 +7,7 @@ import {
   getUserSettings,
   myPlan,
   myProfile,
+  nutrition,
   savePricePlan,
   saveWaterRecord,
   updateMealTracker,
@@ -26,11 +27,14 @@ router.post("/water-tracker", waterTracker);
 
 // *********************MY PLAN ROUTES *************************/
 router.get("/get-users-plan", myPlan);
-router.post("/record-meal", updateMealTracker);
 router.post("/save-price-plan", savePricePlan);
 router.post("/cancel-subscription", cancelSubscription);
 
-//*********************USER SETTINGS ***************************** */
+//**********************NUTRITION PAGE **************************/
+router.get("/get-nutrition", nutrition)
+router.post("/record-meal", updateMealTracker);
+
+//*********************USER SETTINGS ****************************/
 
 router.get("/get-settings", getUserSettings);
 router.put("/update-user-profile", updateUserDetails);

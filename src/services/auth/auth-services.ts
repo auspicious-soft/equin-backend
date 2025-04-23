@@ -8,7 +8,10 @@ import { questionResponseModel } from "src/models/admin/question-response-schema
 import { questionModel } from "src/models/admin/questions-schema";
 import { userPlanModel } from "src/models/user-plan/user-plan-schema";
 import { UserDocument, usersModel } from "src/models/user/user-schema";
-import { sendEmailVerificationMail, sendPasswordResetEmail } from "src/utils/mails/mail";
+import {
+  sendEmailVerificationMail,
+  sendPasswordResetEmail,
+} from "src/utils/mails/mail";
 import {
   generateUserToken,
   getSignUpQueryByAuthType,
@@ -25,10 +28,8 @@ import {
 } from "src/utils/mails/token";
 import { passwordResetTokenModel } from "src/models/password-token-schema";
 import { generateOtpWithTwilio } from "src/utils/sms/sms";
-import { mealPlanModel } from "src/models/admin/meal-plan-schema";
-import { essentialTipModel } from "src/models/admin/essential-tips-schema";
-import { mealPlanModel30 } from "src/models/admin/30days-meal-plan-schema";
 import { healthDataModel } from "src/models/user/health-data-schema";
+import { createSecurityNotification } from "src/services/admin/notification-service";
 configDotenv();
 
 const sanitizeUser = (user: any): UserDocument => {
@@ -44,14 +45,14 @@ export const createQuestionsServices = async (payload: any, res: Response) => {
   // const result = await questionModel.insertMany(payload.questions);
   return {
     success: true,
-    message: "Questions created successfully",
+    message: "Created Successfully",
   };
 };
 export const createPlanServices = async (payload: any, res: Response) => {
   // const result = await pricePlanModel.insertMany(payload.plans);
   return {
     success: true,
-    message: "Pricing plans created successfully",
+    message: "Created Successfully",
   };
 };
 export const createMealPlanServices = async (payload: any, res: Response) => {
@@ -60,15 +61,18 @@ export const createMealPlanServices = async (payload: any, res: Response) => {
   // const result = await mealPlanModel30.insertMany(payload);
   return {
     success: true,
-    message: "Meal plans created successfully",
+    message: "Created Successfully",
   };
 };
-export const createEssentialTipsServices = async (payload: any, res: Response) => {
+export const createEssentialTipsServices = async (
+  payload: any,
+  res: Response
+) => {
   console.log("payload", payload);
   // const result = await essentialTipModel.create(payload);
   return {
     success: true,
-    message: "New tip added successfully",
+    message: "Created Successfully",
   };
 };
 
@@ -80,7 +84,7 @@ export const getQuestionsServices = async (payload: any, res: Response) => {
   const questionResponse = await questionResponseModel.find({ deviceId });
   return {
     success: true,
-    message: "Questions retrieved successfully",
+    message: "Retrieved successfully",
     data: {
       questions: result,
       questionResponse,
@@ -91,7 +95,7 @@ export const getPlanServices = async (payload: any, res: Response) => {
   const result = await pricePlanModel.find();
   return {
     success: true,
-    message: "Plans created successfully",
+    message: "Retrieved successfully",
     data: result,
   };
 };
@@ -106,7 +110,7 @@ export const saveAnswerServices = async (payload: any, res: Response) => {
     );
   }
 
-  if(order === 4){
+  if (order === 4) {
     await healthDataModel.create({
       userId: null,
       deviceId,
@@ -141,16 +145,14 @@ export const saveAnswerServices = async (payload: any, res: Response) => {
 
     return {
       success: true,
-      message: "Answer saved successfully",
+      message: "Saved Successfully",
       data: responseResult,
     };
   } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
     return errorResponseHandler(
-      (error.message as any) ||
-        "Failed to save answer" ||
-        "Failed to save answer",
+      (error.message as any) || "Failed" || "Failed",
       httpStatusCode.INTERNAL_SERVER_ERROR,
       res
     );
@@ -191,7 +193,7 @@ export const userSignUpServices = async (payload: any, res: Response) => {
   await user.save();
   return {
     success: true,
-    message: "OTP sent for verification",
+    message: "OTP Sent Successfully",
   };
 };
 
@@ -223,7 +225,7 @@ export const verifyOTPServices = async (payload: any) => {
   );
 
   await healthDataModel.updateOne(
-    {deviceId: user?.deviceId, userId: null },
+    { deviceId: user?.deviceId, userId: null },
     { $set: { userId: user?._id } }
   );
 
@@ -231,6 +233,13 @@ export const verifyOTPServices = async (payload: any) => {
     { deviceId: user?.deviceId, userId: null },
     { $set: { userId: user?._id } }
   );
+
+  await createSecurityNotification({
+    userId: user?._id as mongoose.Types.ObjectId,
+    title: "Email Verified",
+    message: "OTP verified successfully",
+    deviceId: user?.deviceId,
+  });
 
   await user.save();
   return { data: sanitizeUser(user), message: "OTP verified successfully" };
@@ -394,49 +403,51 @@ export const userSignInServices = async (
   };
 };
 
-export const generateAndSendOTP = async (payload: { email?: string; phoneNumber?: string }) => {
-    const { email, phoneNumber } = payload;
+export const generateAndSendOTP = async (payload: {
+  email?: string;
+  phoneNumber?: string;
+}) => {
+  const { email, phoneNumber } = payload;
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 20 * 60 * 1000); // OTP expires in 20 minutes
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 20 * 60 * 1000); // OTP expires in 20 minutes
 
-    let user;
-    if (email) {
-      user = await usersModel.findOneAndUpdate(
-        { email },
-        {
-          $set: {
-            "otp.code": otp,
-            "otp.expiresAt": expiresAt,
-          },
+  let user;
+  if (email) {
+    user = await usersModel.findOneAndUpdate(
+      { email },
+      {
+        $set: {
+          "otp.code": otp,
+          "otp.expiresAt": expiresAt,
         },
-        { upsert: true, new: true }
-      );
-    } else if (phoneNumber) {
-      user = await usersModel.findOneAndUpdate(
-        { phoneNumber },
-        {
-          $set: {
-            "otp.code": otp,
-            "otp.expiresAt": expiresAt,
-          },
+      },
+      { upsert: true, new: true }
+    );
+  } else if (phoneNumber) {
+    user = await usersModel.findOneAndUpdate(
+      { phoneNumber },
+      {
+        $set: {
+          "otp.code": otp,
+          "otp.expiresAt": expiresAt,
         },
-        { upsert: true, new: true }
-      );
-    }
+      },
+      { upsert: true, new: true }
+    );
+  }
 
+  if (user) {
+    // No need to call save if findOneAndUpdate handles the commit
+    console.log("OTP successfully generated and saved for user: ", user);
+  }
 
-    if (user) {
-      // No need to call save if findOneAndUpdate handles the commit
-      console.log('OTP successfully generated and saved for user: ', user);
-    }
-
-    // Send OTP via the respective method
-    if (phoneNumber) {
-      await generateOtpWithTwilio(phoneNumber, otp);
-    }
-    if (email) {
-      await sendEmailVerificationMail(email, otp, user?.language || "english");
-    }
-    return { success: true, message: "OTP sent successfully" };
-  } 
+  // Send OTP via the respective method
+  if (phoneNumber) {
+    await generateOtpWithTwilio(phoneNumber, otp);
+  }
+  if (email) {
+    await sendEmailVerificationMail(email, otp, user?.language || "english");
+  }
+  return { success: true, message: "OTP sent successfully" };
+};

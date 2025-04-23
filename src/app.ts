@@ -9,6 +9,7 @@ import { admin, auth, stripe, user } from "./routes";
 import bodyParser from "body-parser";
 import { checkAuth } from "./middleware/check-auth";
 import { handleStripeWebhook, stripeCancel, stripeSuccess } from "./controllers/stripe/stripe-controller";
+import { initializeReminderCrons } from './services/admin/reminder-scheduler';
 
 // Create __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url); // <-- Define __filename
@@ -17,6 +18,9 @@ const __dirname = path.dirname(__filename); // <-- Define __dirname
 
 const PORT = process.env.PORT || 8001;
 const app = express();
+
+// Initialize reminder cron jobs
+initializeReminderCrons();
 
 //*****************Stripe Routes*****************/
 //Need Raw Body

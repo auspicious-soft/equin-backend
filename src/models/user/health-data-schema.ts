@@ -7,11 +7,14 @@ export interface HealthDataDocument extends Document {
     unit: string;
     containerSize: number;
     dailyGoal: number;
-    waterReminder: boolean;
   };
   otherDetails: any;
   deviceId: string;
   notification: boolean;
+  mealReminder: boolean;
+  appleHealth: boolean;
+  waterReminder: boolean;
+  Language: string;
 }
 
 const healthDataSchema = new mongoose.Schema(
@@ -38,16 +41,24 @@ const healthDataSchema = new mongoose.Schema(
       },
       containerSize: {
         type: Number,
-        default: 250,
+        default: 0,
       },
       dailyGoal: {
         type: Number,
-        default: 3600,
+        default: 0,
       },
-      waterReminder: {
-        type: Boolean,
-        default: false,
-      },
+    },
+    mealReminder: {
+      type: Boolean,
+      default: true,
+    },
+    appleHealth:{
+      type: Boolean,
+      default: false,
+    },
+    waterReminder: {
+      type: Boolean,
+      default: true,
     },
     otherDetails: {
       type: Object,
@@ -56,6 +67,10 @@ const healthDataSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    Language: {
+      type: String,
+      default: "english",
+    }
   },
   { timestamps: true }
 );
