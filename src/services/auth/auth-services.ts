@@ -42,7 +42,7 @@ const sanitizeUser = (user: any): UserDocument => {
 //************************* META DATA *************************/
 
 export const createQuestionsServices = async (payload: any, res: Response) => {
-  const result = await questionModel.insertMany(payload.questions);
+  // const result = await questionModel.insertMany(payload.questions);
   return {
     success: true,
     message: "Created Successfully",
