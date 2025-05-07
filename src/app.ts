@@ -10,6 +10,7 @@ import bodyParser from "body-parser";
 import { checkAuth } from "./middleware/check-auth";
 import { handleStripeWebhook, stripeCancel, stripeSuccess } from "./controllers/stripe/stripe-controller";
 import { initializeReminderCrons } from './services/admin/reminder-scheduler';
+import { initializeFirebase } from "./utils/FCM/FCM";
 
 // Create __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url); // <-- Define __filename
@@ -21,6 +22,9 @@ const app = express();
 
 // Initialize reminder cron jobs
 initializeReminderCrons();
+
+// Initialize firebase
+initializeFirebase()
 
 //*****************Stripe Routes*****************/
 //Need Raw Body

@@ -37,6 +37,7 @@ const questionSchema = new mongoose.Schema(
       {
         text: { type: String, required: true },
         value: { type: Number, required: true, unique: true },
+        hasIcon:{ type: Boolean, default: false}
       },
     ],
     order: {

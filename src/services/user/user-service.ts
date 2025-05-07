@@ -599,7 +599,7 @@ export const getUserSettingsService = async (req: Request, res: Response) => {
     .select("fullName email phoneNumber _id profilePic")
     .lean();
 
-  const otherDetails = await healthDataModel.findOne({ userId: userData.id });
+  const otherDetails = await healthDataModel.findOne({ userId: userData.id }).lean();
 
   if (!user) {
     return errorResponseHandler(

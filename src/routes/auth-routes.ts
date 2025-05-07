@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { sendPushNotificationToUser } from "src/controllers/admin/admin-controller";
 import {
   createEssentialTips,
   createMealPlan,
@@ -25,6 +26,7 @@ router.post("/create-price-plan", createPricePlan);
 router.post("/create-meal-plan", createMealPlan);
 router.post("/add-essential-tips", createEssentialTips);
 router.post("/create-30days-plan", createMealPlan);
+router.post("/send-push-notifications", sendPushNotificationToUser)
 
 
 

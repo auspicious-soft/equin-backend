@@ -42,7 +42,7 @@ const sanitizeUser = (user: any): UserDocument => {
 //************************* META DATA *************************/
 
 export const createQuestionsServices = async (payload: any, res: Response) => {
-  // const result = await questionModel.insertMany(payload.questions);
+  const result = await questionModel.insertMany(payload.questions);
   return {
     success: true,
     message: "Created Successfully",
@@ -100,7 +100,7 @@ export const getPlanServices = async (payload: any, res: Response) => {
   };
 };
 export const saveAnswerServices = async (payload: any, res: Response) => {
-  const { deviceId, questionId, selectedOptionValues, order } = payload;
+  const { deviceId, questionId, selectedOptionValues } = payload;
 
   if (!deviceId || !questionId || !selectedOptionValues.length) {
     return errorResponseHandler(
@@ -110,12 +110,26 @@ export const saveAnswerServices = async (payload: any, res: Response) => {
     );
   }
 
-  if (order === 4) {
-    await healthDataModel.create({
-      userId: null,
+  const question = await questionModel.findOne({ _id: questionId }).lean();
+
+  if (question?.order === 4) {
+    //if exist then update else create
+    const checkExist = await healthDataModel.findOne({
       deviceId,
-      otherDetails: selectedOptionValues[0],
     });
+
+    if (checkExist) {
+      await healthDataModel.updateOne(
+        { deviceId },
+        { otherDetails: selectedOptionValues[0] }
+      );
+    }else{
+      await healthDataModel.create({
+        userId: null,
+        deviceId,
+        otherDetails: selectedOptionValues[0],
+      });
+    }
   }
 
   const session = await mongoose.startSession();
@@ -132,7 +146,7 @@ export const saveAnswerServices = async (payload: any, res: Response) => {
           deviceId,
           questionId,
           selectedOptionValues,
-          order,
+          order: question?.order || 0,
         },
       ],
       { session }

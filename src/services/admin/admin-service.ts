@@ -14,6 +14,8 @@ import {
   employeesModel,
 } from "src/models/employees/employee-schema";
 import { attendanceModel } from "src/models/attendance/attendance-schema";
+import { sendNotification } from "src/utils/FCM/FCM";
+import { usersModel } from "src/models/user/user-schema";
 const sanitizeUser = (user: any): EmployeeDocument => {
   const sanitized = user.toObject();
   delete sanitized.password;
@@ -190,3 +192,10 @@ export const getAdminDetailsService = async (payload: any, res: Response) => {
   };
 };
 
+//**************For Testing**************/
+export const sendPushNotificationServices = async (payload: any, res: Response) => {
+  const { title, description, fcmToken } = payload;
+  const users = await usersModel.find().lean(); 
+  await sendNotification(fcmToken, title, description);
+}
+//**************For Testing**************/
