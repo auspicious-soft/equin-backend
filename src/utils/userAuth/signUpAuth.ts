@@ -25,7 +25,25 @@ export const generateUserToken = async(user: UserDocument) => {
 };
 
 export const getSignUpQueryByAuthType = (userData: UserDocument, authType: string) => {
-  if (["Email", "Google", "Apple", "Facebook"].includes(authType)) {
+  if (authType === "Email") {
+    // For Email auth, check both email and phoneNumber if both are provided
+    const query: any = {};
+    
+    if (userData.email) {
+      query.email = userData.email.toLowerCase();
+    }
+    
+    if (userData.phoneNumber) {
+      query.phoneNumber = userData.phoneNumber;
+    }
+    
+    // If both are provided, use $or to check either condition
+    if (userData.email && userData.phoneNumber) {
+      return { $or: [{ email: userData.email.toLowerCase() }, { phoneNumber: userData.phoneNumber }] };
+    }
+    
+    return query;
+  } else if (["Google", "Apple", "Facebook"].includes(authType)) {
     return { email: userData.email?.toLowerCase() };
   } else if (authType === "Whatsapp") {
     return { phoneNumber: userData.phoneNumber };
@@ -35,7 +53,7 @@ export const getSignUpQueryByAuthType = (userData: UserDocument, authType: strin
 
 export const handleExistingUser = (existingUser: UserDocument, authType: string, res: Response) => {
   if (existingUser) {
-    const message = authType === "Whatsapp" ? "Phone number already registered" : `Email already registered, try logging in with ${existingUser?.authType}`;
+    const message = authType === "Whatsapp" ? "Phone number already registered" : `Email or Phone number already registered`;
     return errorResponseHandler(message, httpStatusCode.BAD_REQUEST, res);
   }
 };
