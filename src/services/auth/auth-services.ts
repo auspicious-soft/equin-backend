@@ -263,6 +263,20 @@ export const verifyOTPServices = async (payload: any, res: Response) => {
   return { data: sanitizeUser(user), message: "OTP verified successfully" };
 };
 
+export const resendOtpServices = async (payload: any, res: Response) => {
+  const { email } = payload;
+  const user = await usersModel.findOne({ email });
+  if (!user) {
+    return errorResponseHandler(
+      "User not found",
+      httpStatusCode.NOT_FOUND,
+      res
+    );
+  }
+  await generateAndSendOTP({ email });
+  return { success: true, message: "OTP sent successfully" };
+};
+
 export const forgotPasswordUserService = async (
   payload: any,
   res: Response
@@ -428,7 +442,7 @@ export const generateAndSendOTP = async (payload: {
   const { email, phoneNumber } = payload;
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = new Date(Date.now() + 20 * 60 * 1000); // OTP expires in 20 minutes
+  const expiresAt = new Date(Date.now() + 1 * 60 * 1000); // OTP expires in 1 minute
 
   let user;
   if (email) {

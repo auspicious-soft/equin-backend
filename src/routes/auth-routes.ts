@@ -8,6 +8,7 @@ import {
   forgotPassword,
   getPricePlan,
   getQuestions,
+  resendOtp,
   saveAnswers,
   updateForgottenPassword,
   userSignIn,
@@ -37,6 +38,7 @@ router.post("/save-answers", saveAnswers);
 
 router.post("/user-signup", userSignUp);
 router.post("/verify-otp", verifyOTP);
+router.post("/resend-otp", resendOtp);
 
 router.post("/forgot-password", forgotPassword)
 router.post("/verify-forgot-pass-otp", verifyForgotPassOTP)
