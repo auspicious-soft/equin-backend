@@ -123,7 +123,7 @@ export const saveAnswerServices = async (payload: any, res: Response) => {
         { deviceId },
         { otherDetails: selectedOptionValues[0] }
       );
-    }else{
+    } else {
       await healthDataModel.create({
         userId: null,
         deviceId,
@@ -260,7 +260,11 @@ export const verifyOTPServices = async (payload: any, res: Response) => {
   });
 
   await user.save();
-  return { data: sanitizeUser(user), message: "OTP verified successfully" };
+  return {
+    success: true,
+    data: sanitizeUser(user),
+    message: "OTP verified successfully",
+  };
 };
 
 export const resendOtpServices = async (payload: any, res: Response) => {
