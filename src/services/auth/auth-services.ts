@@ -211,7 +211,7 @@ export const userSignUpServices = async (payload: any, res: Response) => {
   };
 };
 
-export const verifyOTPServices = async (payload: any) => {
+export const verifyOTPServices = async (payload: any, res: Response) => {
   const { email, otp } = payload;
   const user = await usersModel.findOne({
     email,
@@ -220,7 +220,11 @@ export const verifyOTPServices = async (payload: any) => {
   });
 
   if (!user) {
-    throw new Error("Invalid or expired OTP");
+    return errorResponseHandler(
+      "Invalid or expired OTP",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
   }
 
   if (user.otp) {

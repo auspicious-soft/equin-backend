@@ -120,7 +120,7 @@ export const userSignUp = async (req: Request, res: Response) => {
 export const verifyOTP = async (req: Request, res: Response) => {
 
   try {
-    const response = await verifyOTPServices(req.body);
+    const response = await verifyOTPServices(req.body, res);
     return res.status(httpStatusCode.CREATED).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);
