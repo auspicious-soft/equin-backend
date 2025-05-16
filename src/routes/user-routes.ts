@@ -2,7 +2,9 @@ import { Router } from "express";
 import { cancelSubscription } from "src/controllers/stripe/stripe-controller";
 import {
   changePassword,
+  chatWithGPT,
   fastingToday,
+  getChatHistory,
   getMealDateWise,
   getUserSettings,
   myPlan,
@@ -41,5 +43,9 @@ router.put("/update-user-profile", updateUserDetails);
 router.get("/my-profile", myProfile);
 router.get("/get-meal-by-date", getMealDateWise);
 router.put("/change-password", changePassword);
+
+//*********************GPT ROUTES *******************************/
+
+router.route("/chat-with-gpt").post(chatWithGPT).get(getChatHistory);
 
 export { router };

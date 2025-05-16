@@ -11,10 +11,13 @@ import { essentialTipModel } from "src/models/admin/essential-tips-schema";
 import { pricePlanModel } from "src/models/admin/price-plan-schema";
 import { trackUserMealModel } from "src/models/user/track-user-meal";
 import { mealPlanModel30 } from "src/models/admin/30days-meal-plan-schema";
-import { createSecurityNotification } from '../admin/notification-service';
+import { createSecurityNotification } from "../admin/notification-service";
 
 import bcrypt from "bcryptjs";
-
+import { chatModel } from "src/models/user/chat-schema";
+import mongoose from "mongoose";
+import { openai } from "src/config/openAI";
+import { ChatCompletionMessageParam } from "openai/resources";
 
 configDotenv();
 
@@ -237,7 +240,7 @@ export const waterDataService = async (req: Request, res: Response) => {
           containerSize,
           dailyGoal,
         },
-        waterReminder: waterReminder
+        waterReminder: waterReminder,
       },
       { new: true }
     );
@@ -476,37 +479,43 @@ export const nutritionServices = async (req: Request, res: Response) => {
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   // Check for active plan
-  const activePlan = await userPlanModel.findOne({
-    userId: userData.id,
-    startDate: { $lte: currentDate },
-    endDate: { $gte: currentDate },
-  }).populate("planId").lean();
+  const activePlan = await userPlanModel
+    .findOne({
+      userId: userData.id,
+      startDate: { $lte: currentDate },
+      endDate: { $gte: currentDate },
+    })
+    .populate("planId")
+    .lean();
 
   let todayMeal;
 
-  if(activePlan){
-    todayMeal = await trackUserMealModel.findOne({
-      userId: userData.id,
-      planDay: {
-        $gte: today,
-        $lt: tomorrow
-      }
-    }).lean();
+  if (activePlan) {
+    todayMeal = await trackUserMealModel
+      .findOne({
+        userId: userData.id,
+        planDay: {
+          $gte: today,
+          $lt: tomorrow,
+        },
+      })
+      .lean();
+  } else {
+    todayMeal = await trackUserMealModel
+      .findOne({
+        userId: userData.id,
+        planDay: {
+          $gte: today,
+          $lt: tomorrow,
+        },
+      })
+      .lean();
 
-  }else{
-    todayMeal = await trackUserMealModel.findOne({
-      userId: userData.id,
-      planDay: {
-        $gte: today,
-        $lt: tomorrow
-      }
-    }).lean();
-
-    if(!todayMeal){
+    if (!todayMeal) {
       todayMeal = await trackUserMealModel.create({
         userId: userData.id,
-        planDay: today
-      })
+        planDay: today,
+      });
     }
   }
 
@@ -599,7 +608,9 @@ export const getUserSettingsService = async (req: Request, res: Response) => {
     .select("fullName email phoneNumber _id profilePic")
     .lean();
 
-  const otherDetails = await healthDataModel.findOne({ userId: userData.id }).lean();
+  const otherDetails = await healthDataModel
+    .findOne({ userId: userData.id })
+    .lean();
 
   if (!user) {
     return errorResponseHandler(
@@ -677,17 +688,26 @@ export const myProfileServices = async (req: Request, res: Response) => {
 
   // Calculate average of last 7 fasts in hours
   const last7Fasts = fastingRecords.slice(0, 7);
-  const averageLast7Fasts = last7Fasts.length > 0
-    ? Math.round(
-        last7Fasts.reduce((sum, fast) => sum + (parseInt(fast.fastingHours?.toString() || '16')), 0) / 
-        last7Fasts.length
-      )
-    : 0;
+  const averageLast7Fasts =
+    last7Fasts.length > 0
+      ? Math.round(
+          last7Fasts.reduce(
+            (sum, fast) =>
+              sum + parseInt(fast.fastingHours?.toString() || "16"),
+            0
+          ) / last7Fasts.length
+        )
+      : 0;
 
   // Find longest fast in hours
-  const longestFast = fastingRecords.length > 0
-    ? Math.max(...fastingRecords.map(fast => parseInt(fast.fastingHours?.toString() || '16')))
-    : 0;
+  const longestFast =
+    fastingRecords.length > 0
+      ? Math.max(
+          ...fastingRecords.map((fast) =>
+            parseInt(fast.fastingHours?.toString() || "16")
+          )
+        )
+      : 0;
 
   // Calculate streaks
   let currentStreak = 0;
@@ -695,20 +715,21 @@ export const myProfileServices = async (req: Request, res: Response) => {
   let tempStreak = 0;
 
   if (fastingRecords.length > 0) {
-    const today = new Date().toISOString().split('T')[0];
-    
+    const today = new Date().toISOString().split("T")[0];
+
     for (let i = 0; i < fastingRecords.length; i++) {
       const currentDate = new Date(fastingRecords[i].date);
       const previousDate = i > 0 ? new Date(fastingRecords[i - 1].date) : null;
-      
-      if (i === 0 && currentDate.toISOString().split('T')[0] === today) {
+
+      if (i === 0 && currentDate.toISOString().split("T")[0] === today) {
         tempStreak = 1;
         currentStreak = 1;
       } else if (previousDate) {
         const diffDays = Math.floor(
-          (previousDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
+          (previousDate.getTime() - currentDate.getTime()) /
+            (1000 * 60 * 60 * 24)
         );
-        
+
         if (diffDays === 1) {
           tempStreak++;
           if (i === 0) {
@@ -722,7 +743,7 @@ export const myProfileServices = async (req: Request, res: Response) => {
         }
       }
     }
-    
+
     // Check one last time for the longest streak
     if (tempStreak > longestStreak) {
       longestStreak = tempStreak;
@@ -730,10 +751,10 @@ export const myProfileServices = async (req: Request, res: Response) => {
   }
 
   // Get recent fasts (last 5 records)
-  const recentFasts = fastingRecords.slice(0, 5).map(fast => ({
+  const recentFasts = fastingRecords.slice(0, 5).map((fast) => ({
     date: fast.date,
     completed: true,
-    duration: parseInt(fast.fastingHours?.toString() || '16')
+    duration: parseInt(fast.fastingHours?.toString() || "16"),
   }));
 
   return {
@@ -747,7 +768,7 @@ export const myProfileServices = async (req: Request, res: Response) => {
       currentStreak,
       weight: healthData?.otherDetails?.weight || 0,
       bmi: healthData?.otherDetails?.bmi || 0,
-      recentFasts
+      recentFasts,
     },
   };
 };
@@ -777,20 +798,22 @@ export const getMealDateWiseServices = async (req: Request, res: Response) => {
       userId: userData.id,
       planDay: {
         $gte: queryDate,
-        $lte: endDate
-      }
+        $lte: endDate,
+      },
     })
-    .populate('planId')
+    .populate("planId")
     .lean();
 
   // Get water intake data for the specified date
-  const waterRecords = await waterTrackerModel.find({
-    userId: userData.id,
-    date: {
-      $gte: queryDate,
-      $lte: endDate
-    }
-  }).lean();
+  const waterRecords = await waterTrackerModel
+    .find({
+      userId: userData.id,
+      date: {
+        $gte: queryDate,
+        $lte: endDate,
+      },
+    })
+    .lean();
 
   // Calculate total water intake for the day
   const totalWaterIntake = waterRecords.reduce(
@@ -799,19 +822,23 @@ export const getMealDateWiseServices = async (req: Request, res: Response) => {
   );
 
   // Get user's daily water intake goal
-  const healthData = await healthDataModel.findOne({
-    userId: userData.id
-  }).lean();
+  const healthData = await healthDataModel
+    .findOne({
+      userId: userData.id,
+    })
+    .lean();
 
   const waterIntake = {
     consumed: totalWaterIntake,
     goal: healthData?.waterIntakeGoal?.dailyGoal || 0,
-    progress: healthData?.waterIntakeGoal?.dailyGoal 
-      ? Math.round((totalWaterIntake / healthData.waterIntakeGoal.dailyGoal) * 100)
+    progress: healthData?.waterIntakeGoal?.dailyGoal
+      ? Math.round(
+          (totalWaterIntake / healthData.waterIntakeGoal.dailyGoal) * 100
+        )
       : 0,
-    unit: healthData?.waterIntakeGoal?.unit || 'ml',
-    containerType: healthData?.waterIntakeGoal?.containerType || 'glass',
-    containerSize: healthData?.waterIntakeGoal?.containerSize || 0
+    unit: healthData?.waterIntakeGoal?.unit || "ml",
+    containerType: healthData?.waterIntakeGoal?.containerType || "glass",
+    containerSize: healthData?.waterIntakeGoal?.containerSize || 0,
   };
 
   return {
@@ -819,10 +846,10 @@ export const getMealDateWiseServices = async (req: Request, res: Response) => {
     message: "User details retrieved successfully",
     data: {
       meal,
-      waterIntake
+      waterIntake,
     },
   };
-}; 
+};
 
 export const changePasswordServices = async (req: Request, res: Response) => {
   const userData = req.user as any;
@@ -838,7 +865,7 @@ export const changePasswordServices = async (req: Request, res: Response) => {
 
   // Find user with password
   const user = await usersModel.findById(userData.id).select("+password");
-  
+
   if (!user) {
     return errorResponseHandler(
       "User not found",
@@ -857,13 +884,17 @@ export const changePasswordServices = async (req: Request, res: Response) => {
   }
 
   // Verify old password
-  const isPasswordValid = await bcrypt.compare(oldPassword, user.password || "");
+  const isPasswordValid = await bcrypt.compare(
+    oldPassword,
+    user.password || ""
+  );
   if (!isPasswordValid) {
     // Create notification for failed password change attempt
     await createSecurityNotification({
       userId: userData.id,
       title: "Failed Password Change Attempt",
-      message: "There was an unsuccessful attempt to change your password. If this wasn't you, please secure your account.",
+      message:
+        "There was an unsuccessful attempt to change your password. If this wasn't you, please secure your account.",
       deviceId: user?.deviceId || "", // Assuming you store device ID in user model
     });
 
@@ -888,7 +919,8 @@ export const changePasswordServices = async (req: Request, res: Response) => {
   await createSecurityNotification({
     userId: userData.id,
     title: "Password Changed Successfully",
-    message: "Your password was successfully changed. If you didn't make this change, please contact support immediately.",
+    message:
+      "Your password was successfully changed. If you didn't make this change, please contact support immediately.",
     deviceId: user?.deviceId || "",
   });
 
@@ -896,6 +928,158 @@ export const changePasswordServices = async (req: Request, res: Response) => {
     success: true,
     message: "Password updated successfully",
   };
-}
+};
+
+export const chatWithGPTServices = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const { content } = req.body;
+
+  if (!content) {
+    return errorResponseHandler(
+      "Message is required",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  try {
+    // Save user's message first
+    await chatModel.create([
+      {
+        userId: userData.id,
+        role: "user",
+        content,
+      },
+    ]);
+
+    // Get the last 10 messages (5 exchanges) from the conversation history
+    const chatHistory = await chatModel
+      .find({ userId: userData.id })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean();
+
+    // Reverse to get chronological order
+    const conversationHistory = chatHistory.reverse();
+
+    // Prepare messages array for OpenAI API with proper typing
+    const messages: ChatCompletionMessageParam[] = [
+      {
+        role: "system",
+        content:
+          "You are a supportive and confident AI coach for an intermittent fasting app. Your job is to guide users through their 16:8 fasting routine, improve their eating habits, suggest light workouts, boost their emotional resilience, and help them build a healthier lifestyle. Always reply in an encouraging and expert tone. You can respond to users to not ask questions from other topics.",
+      },
+      // Add conversation history with proper typing
+      ...conversationHistory.map((msg) => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+      })),
+    ];
+
+    const lastMessage = conversationHistory[conversationHistory.length - 1];
+    if (
+      !lastMessage ||
+      lastMessage.role !== "user" ||
+      lastMessage.content !== content
+    ) {
+      messages.push({
+        role: "user",
+        content,
+      });
+    }
+
+    // Set up streaming response to client
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages,
+      temperature: 0.8,
+      stream: true,
+      max_tokens: 800,
+    });
+
+    let fullResponse = "";
+
+    // Process each chunk from the stream
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || "";
+      if (content) {
+        res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        fullResponse += content;
+      }
+    }
+
+    // End the stream
+    res.write("data: [DONE]\n\n");
+    res.end();
+
+    await chatModel.create([
+      {
+        userId: userData.id,
+        role: "assistant",
+        content: fullResponse,
+      },
+    ]);
+
+    return true; 
+  } catch (err) {
+    console.error("Error in chat stream:", err);
+    if (!res.headersSent) {
+      return errorResponseHandler(
+        "Failed to send message",
+        httpStatusCode.INTERNAL_SERVER_ERROR,
+        res
+      );
+    } else {
+      res.write(
+        `data: ${JSON.stringify({ error: "Stream error occurred" })}\n\n`
+      );
+      res.end();
+      return true;
+    }
+  }
+};
+
+export const chatHistoryServices = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  
+  // Get pagination parameters from query
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 20;
+  const skip = (page - 1) * limit;
+  
+  // Get total count for pagination metadata
+  const totalCount = await chatModel.countDocuments({ userId: userData.id });
+  
+  // Get paginated chat history
+  const chatHistory = await chatModel
+    .find({ userId: userData.id })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+  
+  // Calculate pagination metadata
+  const totalPages = Math.ceil(totalCount / limit);
+  const hasNextPage = page < totalPages;
+  const hasPrevPage = page > 1;
+  
+  return {
+    success: true,
+    message: "Chat history retrieved successfully",
+    data: chatHistory,
+    pagination: {
+      totalCount,
+      totalPages,
+      currentPage: page,
+      limit,
+      hasNextPage,
+      hasPrevPage
+    }
+  };
+};
 
 //*****************************FOR EQUIN APP *********************************/
