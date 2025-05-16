@@ -6,6 +6,7 @@ import {
   fastingToday,
   getChatHistory,
   getMealDateWise,
+  getNutritionByImage,
   getUserSettings,
   myPlan,
   myProfile,
@@ -47,5 +48,6 @@ router.put("/change-password", changePassword);
 //*********************GPT ROUTES *******************************/
 
 router.route("/chat-with-gpt").post(chatWithGPT).get(getChatHistory);
+router.post("/get-nutrition-by-image", getNutritionByImage)
 
 export { router };

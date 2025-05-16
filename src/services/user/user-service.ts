@@ -954,7 +954,7 @@ export const chatWithGPTServices = async (req: Request, res: Response) => {
 
     // Get the last 10 messages (5 exchanges) from the conversation history
     const chatHistory = await chatModel
-      .find({ userId: userData.id })
+      .find({ userId: userData.id, modelUsed: "gpt-4" })
       .sort({ createdAt: -1 })
       .limit(10)
       .lean();
@@ -1024,7 +1024,7 @@ export const chatWithGPTServices = async (req: Request, res: Response) => {
       },
     ]);
 
-    return true; 
+    return true;
   } catch (err) {
     console.error("Error in chat stream:", err);
     if (!res.headersSent) {
@@ -1045,28 +1045,31 @@ export const chatWithGPTServices = async (req: Request, res: Response) => {
 
 export const chatHistoryServices = async (req: Request, res: Response) => {
   const userData = req.user as any;
-  
+
   // Get pagination parameters from query
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
   const skip = (page - 1) * limit;
-  
+
   // Get total count for pagination metadata
-  const totalCount = await chatModel.countDocuments({ userId: userData.id });
-  
+  const totalCount = await chatModel.countDocuments({
+    userId: userData.id,
+    modelUsed: "gpt-4",
+  });
+
   // Get paginated chat history
   const chatHistory = await chatModel
-    .find({ userId: userData.id })
+    .find({ userId: userData.id, modelUsed: "gpt-4" })
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
     .lean();
-  
+
   // Calculate pagination metadata
   const totalPages = Math.ceil(totalCount / limit);
   const hasNextPage = page < totalPages;
   const hasPrevPage = page > 1;
-  
+
   return {
     success: true,
     message: "Chat history retrieved successfully",
@@ -1077,9 +1080,95 @@ export const chatHistoryServices = async (req: Request, res: Response) => {
       currentPage: page,
       limit,
       hasNextPage,
-      hasPrevPage
-    }
+      hasPrevPage,
+    },
   };
+};
+
+export const getNutritionByImageServices = async (
+  req: Request,
+  res: Response
+) => {
+  const userData = req.user as any;
+  const { imageUrl } = req.body;
+
+  if (!imageUrl) {
+    return errorResponseHandler(
+      "Image URL is required",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  try {
+    // Call OpenAI API with the image
+    const response = await openai.chat.completions.create({
+      model: "gpt-4-turbo", // Using vision model to analyze images
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a nutritionist AI. Extract food items and estimate their calorie and protein content. Return structured JSON only with no text included. Example {carbs: in gms, protein: in gms, fat: in gms}",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Return a JSON by extracting nutritional information from the image in this format {carbs: in gms, protein: in gms, fat: in gms, status: true}",
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 1000,
+    });
+
+    // Extract the response content
+    const content = response.choices[0].message.content;
+
+    // Parse the JSON response
+    let nutritionData;
+    try {
+      const jsonContent = content?.replace(/```json|```/g, "").trim();
+      nutritionData = JSON.parse(jsonContent || "{}");
+    } catch (parseError) {
+      console.error("Error parsing nutrition data:", parseError);
+      nutritionData = {
+        carbs: 0,
+        protein: 0,
+        fat: 0,
+        status: false,
+        error: "Could not parse nutrition data",
+      };
+    }
+
+    await chatModel.create({
+      userId: userData.id,
+      role: "user",
+      modelUsed: "gpt-4-turbo",
+      imageUrl,
+      content: JSON.stringify(nutritionData),
+    });
+
+    return {
+      success: true,
+      message: "Nutrition data retrieved successfully",
+      data: nutritionData,
+    };
+  } catch (error) {
+    console.error("Error analyzing image:", error);
+    return errorResponseHandler(
+      "Failed to analyze food image",
+      httpStatusCode.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
 };
 
 //*****************************FOR EQUIN APP *********************************/

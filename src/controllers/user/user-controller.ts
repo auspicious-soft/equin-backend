@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { httpStatusCode } from "../../lib/constant";
 import { errorParser } from "../../lib/errors/error-response-handler";
-import { changePasswordServices, chatHistoryServices, chatWithGPTServices, fastingTodayService, getMealDateWiseServices, getUserSettingsService, myPlanService, myProfileServices, nutritionServices, savePricePlanServices, updateMealTrackerService, updateUserDetailsService, userHomeService, waterDataService, waterTracketService } from "src/services/user/user-service";
+import { changePasswordServices, chatHistoryServices, chatWithGPTServices, fastingTodayService, getMealDateWiseServices, getNutritionByImageServices, getUserSettingsService, myPlanService, myProfileServices, nutritionServices, savePricePlanServices, updateMealTrackerService, updateUserDetailsService, userHomeService, waterDataService, waterTracketService } from "src/services/user/user-service";
 
 export const userHome = async (req: Request, res: Response) => {
   try {
@@ -171,6 +171,17 @@ export const chatWithGPT = async (req: Request, res: Response) => {
 export const getChatHistory = async (req: Request, res: Response) => {
   try {
     const response = await chatHistoryServices(req, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const getNutritionByImage = async (req: Request, res: Response) => {
+  try {
+    const response = await getNutritionByImageServices(req, res);
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);
