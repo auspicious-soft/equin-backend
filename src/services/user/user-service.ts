@@ -125,6 +125,10 @@ export const userHomeService = async (req: Request, res: Response) => {
     0
   );
 
+  const waterReminder = await healthDataModel.findOne({
+    userId: userData.id,
+  }).lean();
+
   return {
     success: true,
     message: "User home page",
@@ -138,6 +142,7 @@ export const userHomeService = async (req: Request, res: Response) => {
         end: endOfWeek.toISOString().split("T")[0],
       },
       waterIntake: {
+        waterReminder: waterReminder?.waterReminder || false,
         today: todayTotalWaterIntake,
         goal: waterGoalData?.waterIntakeGoal.dailyGoal || 0,
         containerType: waterGoalData?.waterIntakeGoal.containerType || "glass",
