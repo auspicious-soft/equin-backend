@@ -79,7 +79,7 @@ export const createEssentialTipsServices = async (
 //************************* USER QUESTIONAIRE *************************/
 
 export const getQuestionsServices = async (payload: any, res: Response) => {
-  const { deviceId } = payload;
+  const {deviceId} = payload.params;
   const result = await questionModel.find().sort({ order: 1 });
   const questionResponse = await questionResponseModel.find({ deviceId });
   return {

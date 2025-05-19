@@ -70,7 +70,7 @@ export const createEssentialTips = async (req: Request, res: Response) => {
 
 export const getQuestions = async (req: Request, res: Response) => {
   try {
-    const response = await getQuestionsServices(req.body, res);
+    const response = await getQuestionsServices(req, res);
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);

@@ -32,7 +32,7 @@ router.post("/send-push-notifications", sendPushNotificationToUser)
 
 
 router.get("/get-price-plan", getPricePlan);
-router.get("/get-questions", getQuestions);
+router.get("/get-questions/:deviceId", getQuestions);
 router.post("/save-answers", saveAnswers);
 
 
