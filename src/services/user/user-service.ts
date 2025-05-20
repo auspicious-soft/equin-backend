@@ -387,10 +387,10 @@ export const myPlanService = async (req: Request, res: Response) => {
     const fiveDayMealTracker = await trackUserMealModel
       .find({
         userId: userData.id,
-        planDay: {
-          $gte: twoDaysAgo,
-          $lte: twoDaysAhead,
-        },
+        // planDay: {
+        //   $gte: twoDaysAgo,
+        //   $lte: twoDaysAhead,
+        // },
       })
       .sort({ planDay: 1 })
       .populate("planId");
