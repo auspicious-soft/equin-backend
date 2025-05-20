@@ -610,7 +610,7 @@ export const getUserSettingsService = async (req: Request, res: Response) => {
   const userData = req.user as any;
   const user = await usersModel
     .findById(userData.id)
-    .select("fullName email phoneNumber _id profilePic")
+    .select("fullName email phoneNumber _id profilePic countryCode")
     .lean();
 
   const otherDetails = await healthDataModel
