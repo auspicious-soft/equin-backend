@@ -125,9 +125,11 @@ export const userHomeService = async (req: Request, res: Response) => {
     0
   );
 
-  const waterReminder = await healthDataModel.findOne({
-    userId: userData.id,
-  }).lean();
+  const waterReminder = await healthDataModel
+    .findOne({
+      userId: userData.id,
+    })
+    .lean();
 
   return {
     success: true,
@@ -688,6 +690,30 @@ export const myProfileServices = async (req: Request, res: Response) => {
     .sort({ date: -1 })
     .lean();
 
+  const caloryIntake = await trackUserMealModel
+    .find({
+      userId: userData.id,
+    })
+    .lean();
+
+  fastingRecords.forEach((record) => {
+    const mealRecord = caloryIntake.find(
+      (meal) => meal.planDay.toISOString().split("T")[0] === record.date
+    );
+    if (mealRecord) {
+      (record as any).calories =
+        mealRecord.firstMealStatus.carbs * 4 +
+        mealRecord.firstMealStatus.protein * 4 +
+        mealRecord.firstMealStatus.fat * 9 +
+        mealRecord.secondMealStatus.carbs * 4 +
+        mealRecord.secondMealStatus.protein * 4 +
+        mealRecord.secondMealStatus.fat * 9 +
+        mealRecord.thirdMealStatus.carbs * 4 +
+        mealRecord.thirdMealStatus.protein * 4 +
+        mealRecord.thirdMealStatus.fat * 9;
+    }
+  });
+
   // Calculate total fasts
   const totalFasts = fastingRecords.length;
 
@@ -755,10 +781,11 @@ export const myProfileServices = async (req: Request, res: Response) => {
     }
   }
 
-  // Get recent fasts (last 5 records)
-  const recentFasts = fastingRecords.slice(0, 5).map((fast) => ({
+  // Get recent fasts (last 10 records)
+  const recentFasts = fastingRecords.slice(0, 10).map((fast) => ({
     date: fast.date,
     completed: true,
+    calories: (fast as any)?.calories || 0,
     duration: parseInt(fast.fastingHours?.toString() || "16"),
   }));
 
@@ -780,7 +807,7 @@ export const myProfileServices = async (req: Request, res: Response) => {
 
 export const getMealDateWiseServices = async (req: Request, res: Response) => {
   const userData = req.user as any;
-  const { date } = req.body;
+  const { date } = req.query;
 
   if (!date) {
     return errorResponseHandler(
@@ -791,10 +818,10 @@ export const getMealDateWiseServices = async (req: Request, res: Response) => {
   }
 
   // Convert date string to Date object
-  const queryDate = new Date(date);
+  const queryDate = new Date(date as string);
   queryDate.setHours(0, 0, 0, 0);
 
-  const endDate = new Date(date);
+  const endDate = new Date(date as string);
   endDate.setHours(23, 59, 59, 999);
 
   // Get meal information for the specified date
@@ -845,6 +872,51 @@ export const getMealDateWiseServices = async (req: Request, res: Response) => {
     containerType: healthData?.waterIntakeGoal?.containerType || "glass",
     containerSize: healthData?.waterIntakeGoal?.containerSize || 0,
   };
+
+  // If meal exists and has planId with meals, add status information to each meal
+  if (meal && meal.planId && Array.isArray((meal.planId as any).meals)) {
+    // Define interface for meal item
+    interface MealItem {
+      meal_time: string;
+      items: string[];
+      calories: string;
+      _id: string;
+      [key: string]: any; // Allow for additional properties
+    }
+
+    // Define interface for meal status
+    interface MealStatus {
+      carbs: number;
+      protein: number;
+      fat: number;
+      status: boolean;
+    }
+
+    // Map meal times to status fields with proper typing
+    const mealTimeToStatus: Record<string, MealStatus> = {
+      "Meal 1 (12:00 PM - Main)": meal.firstMealStatus,
+      "Meal 2 (3:00 PM - Snack)": meal.secondMealStatus,
+      "Meal 3 (7:00 PM - Main)": meal.thirdMealStatus,
+    };
+
+    // Add status to each meal with proper typing
+    (meal.planId as any).meals = (meal.planId as any).meals?.map(
+      (mealItem: MealItem) => {
+        // Find the corresponding status based on meal_time
+        // Use type assertion to ensure TypeScript knows meal_time is a valid key
+        const status =
+          mealTimeToStatus[
+            mealItem.meal_time as keyof typeof mealTimeToStatus
+          ] || meal.otherMealStatus;
+
+        // Return the meal with added status
+        return {
+          ...mealItem,
+          mealStatus: status,
+        };
+      }
+    );
+  }
 
   return {
     success: true,
