@@ -703,7 +703,6 @@ export const updateUserProfilePhotoService = async (
     
     const { filename, mimeType } = fileInfo;
     
-    // Create a readable stream from the file stream
     const readableStream = new Readable();
     readableStream._read = () => {}; // Required implementation
     
