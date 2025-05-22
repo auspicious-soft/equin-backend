@@ -15,6 +15,7 @@ import {
   saveWaterRecord,
   updateMealTracker,
   updateUserDetails,
+  updateUserProfilePhoto,
   userHome,
   waterTracker,
 } from "src/controllers/user/user-controller";
@@ -41,6 +42,7 @@ router.post("/record-meal", updateMealTracker);
 
 router.get("/get-settings", getUserSettings);
 router.put("/update-user-profile", updateUserDetails);
+router.post("/update-profile-pic", updateUserProfilePhoto);
 router.get("/my-profile", myProfile);
 router.get("/get-meal-by-date", getMealDateWise);
 router.put("/change-password", changePassword);

@@ -18,6 +18,12 @@ import { chatModel } from "src/models/user/chat-schema";
 import mongoose from "mongoose";
 import { openai } from "src/config/openAI";
 import { ChatCompletionMessageParam } from "openai/resources";
+import { Readable } from "stream";
+import Busboy from "busboy";
+import { createS3Client } from "src/config/s3";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+
+import { uploadStreamToS3Service } from "src/utils/s3/s3";
 
 configDotenv();
 
@@ -652,12 +658,7 @@ export const getUserSettingsService = async (req: Request, res: Response) => {
 
 export const updateUserDetailsService = async (req: Request, res: Response) => {
   const userData = req.user as any;
-  const { gender, dob, age, height, weight, bmi, profilePic } = req.body;
-  await usersModel.findByIdAndUpdate(
-    userData.id,
-    { profilePic },
-    { new: true }
-  );
+  const { gender, dob, age, height, weight, bmi} = req.body;
 
   await healthDataModel.findOneAndUpdate(
     { userId: userData.id },
@@ -670,6 +671,102 @@ export const updateUserDetailsService = async (req: Request, res: Response) => {
     message: "Data updated successfully",
   };
 };
+
+export const updateUserProfilePhotoService = async (
+  req: Request,
+  res: Response
+) => {
+  const userData = req.user as any;
+  const userEmail = userData.email || req.query.email as string;
+  
+  if (!userEmail) {
+    return errorResponseHandler('User email is required', httpStatusCode.BAD_REQUEST, res);
+  }
+  
+  // Check content type
+  if (!req.headers['content-type']?.includes('multipart/form-data')) {
+    return errorResponseHandler('Content-Type must be multipart/form-data', httpStatusCode.BAD_REQUEST, res);
+  }
+  
+  // Get existing user to check for previous profile image
+  const existingUser = await usersModel.findById(userData.id);
+  const previousImageKey = existingUser?.profilePic;
+  
+  const busboy = Busboy({ headers: req.headers });
+  let uploadPromise: Promise<string> | null = null;
+  
+  busboy.on('file', async (fieldname: string, fileStream: any, fileInfo: any) => {
+    if (fieldname !== 'image') {
+      fileStream.resume(); // Skip this file
+      return;
+    }
+    
+    const { filename, mimeType } = fileInfo;
+    
+    // Create a readable stream from the file stream
+    const readableStream = new Readable();
+    readableStream._read = () => {}; // Required implementation
+    
+    fileStream.on('data', (chunk: any) => {
+      readableStream.push(chunk);
+    });
+    
+    fileStream.on('end', () => {
+      readableStream.push(null); // End of stream
+    });
+    
+    uploadPromise = uploadStreamToS3Service(
+      readableStream,
+      filename,
+      mimeType,
+      userEmail
+    );
+  });
+  
+  return new Promise((resolve) => {
+    busboy.on('finish', async () => {
+      if (!uploadPromise) {
+        resolve({
+          success: false,
+          message: 'No image file found in the request'
+        });
+        return;
+      }
+      
+      const imageKey = await uploadPromise;
+      
+      // Update user profile with new image URL
+      await usersModel.findByIdAndUpdate(
+        userData.id,
+        { profilePic: imageKey },
+        { new: true }
+      );
+      
+      // Delete previous image from S3 if it exists
+      if (previousImageKey) {
+        const s3Client = createS3Client();
+        const deleteParams = {
+          Bucket: process.env.AWS_BUCKET_NAME,
+          Key: previousImageKey
+        };
+        try {
+          await s3Client.send(new DeleteObjectCommand(deleteParams));
+        } catch (deleteError) {
+          console.error('Error deleting previous image:', deleteError);
+          // Continue execution even if delete fails
+        }
+      }
+      
+      resolve({
+        success: true,
+        message: 'Profile picture updated successfully',
+        data: { imageKey }
+      });
+    });
+    
+    req.pipe(busboy);
+  });
+}
 
 export const myProfileServices = async (req: Request, res: Response) => {
   const userData = req.user as any;
