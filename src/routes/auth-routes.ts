@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { sendPushNotificationToUser } from "src/controllers/admin/admin-controller";
 import {
+  createContactSupport,
   createEssentialTips,
   createMealPlan,
   createPricePlan,
+  createPrivacyPolicy,
   createQuestions,
   forgotPassword,
   getPricePlan,
@@ -28,6 +30,8 @@ router.post("/create-meal-plan", createMealPlan);
 router.post("/add-essential-tips", createEssentialTips);
 router.post("/create-30days-plan", createMealPlan);
 router.post("/send-push-notifications", sendPushNotificationToUser)
+router.post("/create-privacy-policy", createPrivacyPolicy)
+router.post("/create-contact-support", createContactSupport)
 
 
 

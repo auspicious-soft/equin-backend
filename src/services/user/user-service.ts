@@ -24,6 +24,8 @@ import { createS3Client } from "src/config/s3";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 import { uploadStreamToS3Service } from "src/utils/s3/s3";
+import { privacyPolicyModel } from "src/models/admin/privacy-policy-schema";
+import { contactSupportModel } from "src/models/admin/contact-support-schema";
 
 configDotenv();
 
@@ -1466,6 +1468,39 @@ export const getNutritionByImageServices = async (
       httpStatusCode.INTERNAL_SERVER_ERROR,
       res
     );
+  }
+};
+
+export const getPrivacyAndContactSupportServices = async (
+  req: Request,
+  res: Response
+) => {
+  const type = req.query.type as string;
+
+  if (!type) {
+    return errorResponseHandler(
+      "Type is required",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  if (type === "privacy") {
+    const privacyPolicy = await privacyPolicyModel.findOne({ isActive: true });
+    return {
+      success: true,
+      message: "Data retrieved successfully",
+      data: privacyPolicy,
+    };
+  }
+
+  if (type === "contact") {
+    const contactSupport = await contactSupportModel.findOne({ isActive: true });
+    return {
+      success: true,
+      message: "Data retrieved successfully",
+      data: contactSupport,
+    };
   }
 };
 

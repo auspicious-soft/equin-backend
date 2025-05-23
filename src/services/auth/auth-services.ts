@@ -30,6 +30,8 @@ import { passwordResetTokenModel } from "src/models/password-token-schema";
 import { generateOtpWithTwilio } from "src/utils/sms/sms";
 import { healthDataModel } from "src/models/user/health-data-schema";
 import { createSecurityNotification } from "src/services/admin/notification-service";
+import { privacyPolicyModel } from "src/models/admin/privacy-policy-schema";
+import { contactSupportModel } from "src/models/admin/contact-support-schema";
 configDotenv();
 
 const sanitizeUser = (user: any): UserDocument => {
@@ -70,6 +72,43 @@ export const createEssentialTipsServices = async (
 ) => {
   console.log("payload", payload);
   // const result = await essentialTipModel.create(payload);
+  return {
+    success: true,
+    message: "Created Successfully",
+  };
+};
+
+export const createPrivacyPolicyServices = async (
+  payload: any,
+  res: Response
+) => {
+  // const response = await privacyPolicyModel.findOneAndUpdate(
+  //   { isActive: true },
+  //   payload,
+  //   {
+  //     new: true,
+  //     upsert: true,
+  //   }
+  // );
+
+  return {
+    success: true,
+    message: "Created Successfully",
+  };
+};
+export const createContactSupportServices = async (
+  payload: any,
+  res: Response
+) => {
+  // const response = await contactSupportModel.findOneAndUpdate(
+  //   { isActive: true },
+  //   payload,
+  //   {
+  //     new: true,
+  //     upsert: true,
+  //   }
+  // );
+
   return {
     success: true,
     message: "Created Successfully",
@@ -454,7 +493,7 @@ export const userSignInServices = async (
 
   user.token = await generateUserToken(user as any);
 
-  if(!user.fcmToken.includes(userData.fcmToken)){
+  if (!user.fcmToken.includes(userData.fcmToken)) {
     user.fcmToken.push(userData.fcmToken);
   }
 

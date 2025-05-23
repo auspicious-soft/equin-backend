@@ -2,9 +2,11 @@ import { Request, Response } from "express";
 import { httpStatusCode } from "../../lib/constant";
 import { errorParser } from "../../lib/errors/error-response-handler";
 import {
+  createContactSupportServices,
   createEssentialTipsServices,
   createMealPlanServices,
   createPlanServices,
+  createPrivacyPolicyServices,
   createQuestionsServices,
   forgotPasswordUserService,
   getPlanServices,
@@ -57,6 +59,28 @@ export const createMealPlan = async (req: Request, res: Response) => {
 export const createEssentialTips = async (req: Request, res: Response) => {
   try {
     const response = await createEssentialTipsServices(req.body, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const createPrivacyPolicy = async (req: Request, res: Response) => {
+  try {
+    const response = await createPrivacyPolicyServices(req.body, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const createContactSupport = async (req: Request, res: Response) => {
+  try {
+    const response = await createContactSupportServices(req.body, res);
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);

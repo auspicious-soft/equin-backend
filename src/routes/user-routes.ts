@@ -7,6 +7,7 @@ import {
   getChatHistory,
   getMealDateWise,
   getNutritionByImage,
+  getPrivacyAndContactSupport,
   getUserSettings,
   logoutUser,
   myPlan,
@@ -48,6 +49,7 @@ router.get("/my-profile", myProfile);
 router.get("/get-meal-by-date", getMealDateWise);
 router.put("/change-password", changePassword);
 router.post("/logout-user", logoutUser);
+router.get("/get-privacy-and-contact-support", getPrivacyAndContactSupport);
 
 //*********************GPT ROUTES *******************************/
 
