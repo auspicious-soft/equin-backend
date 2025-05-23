@@ -14,8 +14,8 @@ import { mealPlanModel30 } from "src/models/admin/30days-meal-plan-schema";
 import { createSecurityNotification } from "../admin/notification-service";
 
 import bcrypt from "bcryptjs";
+import { startOfWeek, endOfWeek } from "date-fns";
 import { chatModel } from "src/models/user/chat-schema";
-import mongoose from "mongoose";
 import { openai } from "src/config/openAI";
 import { ChatCompletionMessageParam } from "openai/resources";
 import { Readable } from "stream";
@@ -52,11 +52,10 @@ const sanitizeUser = (user: any): UserDocument => {
 export const userHomeService = async (req: Request, res: Response) => {
   const userData = req.user as any;
 
-  // Calculate fasting streak
   const today = new Date().toISOString().split("T")[0];
   let fastingStreak = 0;
 
-  // Get records sorted by date in descending order
+  // Get fasting records sorted by date (descending)
   const fastingRecords = await fastingRecordModel
     .find({
       userId: userData.id,
@@ -64,34 +63,73 @@ export const userHomeService = async (req: Request, res: Response) => {
     })
     .sort({ date: -1 });
 
-  // Calculate streak
-  for (const record of fastingRecords) {
-    const recordDate = new Date(record.date);
-    const previousDate = new Date(today);
-    previousDate.setDate(previousDate.getDate() - fastingStreak);
+  const fastingMethod = await healthDataModel
+    .findOne({
+      userId: userData.id,
+    })
+    .lean();
 
-    if (
-      recordDate.toISOString().split("T")[0] ===
-      previousDate.toISOString().split("T")[0]
-    ) {
-      fastingStreak++;
-    } else {
-      break;
+  if (fastingMethod?.fastingMethod === "5:2") {
+    // 5:2 Method: Streak = Number of consecutive weeks with at least 2 fasts
+    let weekOffset = 0;
+
+    while (true) {
+      const referenceDate = new Date();
+      referenceDate.setDate(referenceDate.getDate() - weekOffset * 7);
+
+      const weekStart = new Date(referenceDate);
+      const day = weekStart.getDay(); // 0 (Sun) - 6 (Sat)
+      weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1));
+      weekStart.setHours(0, 0, 0, 0);
+
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999);
+
+      const records = await fastingRecordModel.find({
+        userId: userData.id,
+        date: {
+          $gte: weekStart.toISOString().split("T")[0],
+          $lte: weekEnd.toISOString().split("T")[0],
+        },
+        isFasting: true,
+      });
+
+      if (records.length >= 2) {
+        fastingStreak++;
+        weekOffset++;
+      } else {
+        break; // Streak ends
+      }
+    }
+  } else {
+    // Default (e.g. 16:8): Count consecutive fasting days
+    for (const record of fastingRecords) {
+      const recordDate = new Date(record.date);
+      const previousDate = new Date(today);
+      previousDate.setDate(previousDate.getDate() - fastingStreak);
+
+      if (
+        recordDate.toISOString().split("T")[0] ===
+        previousDate.toISOString().split("T")[0]
+      ) {
+        fastingStreak++;
+      } else {
+        break;
+      }
     }
   }
 
-  // Calculate this week's fasting days and hours (Monday to Sunday)
+  // Calculate this week's fasting stats
   const currentDate = new Date();
   const currentDay = currentDate.getDay(); // 0 is Sunday, 1 is Monday, etc.
 
-  // Calculate the start of week (Monday)
   const startOfWeek = new Date();
   startOfWeek.setDate(
     currentDate.getDate() - (currentDay === 0 ? 6 : currentDay - 1)
   );
   startOfWeek.setHours(0, 0, 0, 0);
 
-  // Calculate the end of week (Sunday)
   const endOfWeek = new Date(startOfWeek);
   endOfWeek.setDate(startOfWeek.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
@@ -106,15 +144,16 @@ export const userHomeService = async (req: Request, res: Response) => {
   });
 
   const thisWeekFastingDays = thisWeekRecords.length;
-  const thisWeekFastingHours = thisWeekFastingDays * 16;
+  const thisWeekFastingHours =
+    fastingMethod?.fastingMethod === "5:2"
+      ? thisWeekFastingDays * 16
+      : thisWeekFastingDays * 16;
 
-  // Get water intake goal settings
+  // Water intake tracking
   const waterGoalData = await healthDataModel.findOne({ userId: userData.id });
 
-  // Get today's water intake records
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
-
   const endOfToday = new Date();
   endOfToday.setHours(23, 59, 59, 999);
 
@@ -142,6 +181,7 @@ export const userHomeService = async (req: Request, res: Response) => {
     message: "User home page",
     data: {
       fastingStreak,
+      fastingMethod: fastingMethod?.fastingMethod || "16:8",
       thisWeekFastingDays,
       thisWeekFastingHours,
       todaysFastingStatus: fastingRecords[0]?.date === today ? true : false,
@@ -166,15 +206,13 @@ export const userHomeService = async (req: Request, res: Response) => {
       },
     },
   };
-};
+}; // Install via: npm install date-fns
 
 export const fastingTodayService = async (req: Request, res: Response) => {
   const userData = req.user as any;
 
-  // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split("T")[0];
 
-  // Check if a record already exists for today
   const existingRecord = await fastingRecordModel.findOne({
     userId: userData.id,
     date: today,
@@ -188,12 +226,50 @@ export const fastingTodayService = async (req: Request, res: Response) => {
     );
   }
 
-  // Create new fasting record for today
-  const fastingRecord = await fastingRecordModel.create({
-    userId: userData.id,
-    date: today,
-    isFasting: true,
-  });
+  const fastingMethod = await healthDataModel
+    .findOne({
+      userId: userData.id,
+    })
+    .lean();
+
+  let fastingRecord = {};
+
+  if (fastingMethod?.fastingMethod === "5:2") {
+    // Get the start and end of the current week (Monday to Sunday)
+    const startOfWeekDate = startOfWeek(new Date(), { weekStartsOn: 1 }); // 1 = Monday
+    const endOfWeekDate = endOfWeek(new Date(), { weekStartsOn: 1 });
+
+    const weeklyRecordsCount = await fastingRecordModel.countDocuments({
+      userId: userData.id,
+      date: {
+        $gte: startOfWeekDate.toISOString().split("T")[0],
+        $lte: endOfWeekDate.toISOString().split("T")[0],
+      },
+    });
+
+    if (weeklyRecordsCount >= 2) {
+      return errorResponseHandler(
+        "You can only create 2 fasting records per week for the 5:2 method.",
+        httpStatusCode.BAD_REQUEST,
+        res
+      );
+    }
+
+    // Create new fasting record
+    fastingRecord = await fastingRecordModel.create({
+      userId: userData.id,
+      date: today,
+      fastingHours: 16,
+      isFasting: true,
+    });
+  } else if (fastingMethod?.fastingMethod === "16:8") {
+    fastingRecord = await fastingRecordModel.create({
+      userId: userData.id,
+      date: today,
+      fastingHours: 16,
+      isFasting: true,
+    });
+  }
 
   return {
     success: true,
@@ -658,7 +734,7 @@ export const getUserSettingsService = async (req: Request, res: Response) => {
 
 export const updateUserDetailsService = async (req: Request, res: Response) => {
   const userData = req.user as any;
-  const { gender, dob, age, height, weight, bmi} = req.body;
+  const { gender, dob, age, height, weight, bmi } = req.body;
 
   await healthDataModel.findOneAndUpdate(
     { userId: userData.id },
@@ -677,119 +753,123 @@ export const updateUserProfilePhotoService = async (
   res: Response
 ) => {
   const userData = req.user as any;
-  const userEmail = userData.email || req.query.email as string;
-  
+  const userEmail = userData.email || (req.query.email as string);
+
   if (!userEmail) {
-    return errorResponseHandler('User email is required', httpStatusCode.BAD_REQUEST, res);
+    return errorResponseHandler(
+      "User email is required",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
   }
-  
+
   // Check content type
-  if (!req.headers['content-type']?.includes('multipart/form-data')) {
-    return errorResponseHandler('Content-Type must be multipart/form-data', httpStatusCode.BAD_REQUEST, res);
+  if (!req.headers["content-type"]?.includes("multipart/form-data")) {
+    return errorResponseHandler(
+      "Content-Type must be multipart/form-data",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
   }
-  
+
   // Get existing user to check for previous profile image
   const existingUser = await usersModel.findById(userData.id);
   const previousImageKey = existingUser?.profilePic;
-  
+
   const busboy = Busboy({ headers: req.headers });
   let uploadPromise: Promise<string> | null = null;
-  
-  busboy.on('file', async (fieldname: string, fileStream: any, fileInfo: any) => {
-    if (fieldname !== 'image') {
-      fileStream.resume(); // Skip this file
-      return;
+
+  busboy.on(
+    "file",
+    async (fieldname: string, fileStream: any, fileInfo: any) => {
+      if (fieldname !== "image") {
+        fileStream.resume(); // Skip this file
+        return;
+      }
+
+      const { filename, mimeType } = fileInfo;
+
+      const readableStream = new Readable();
+      readableStream._read = () => {}; // Required implementation
+
+      fileStream.on("data", (chunk: any) => {
+        readableStream.push(chunk);
+      });
+
+      fileStream.on("end", () => {
+        readableStream.push(null); // End of stream
+      });
+
+      uploadPromise = uploadStreamToS3Service(
+        readableStream,
+        filename,
+        mimeType,
+        userEmail
+      );
     }
-    
-    const { filename, mimeType } = fileInfo;
-    
-    const readableStream = new Readable();
-    readableStream._read = () => {}; // Required implementation
-    
-    fileStream.on('data', (chunk: any) => {
-      readableStream.push(chunk);
-    });
-    
-    fileStream.on('end', () => {
-      readableStream.push(null); // End of stream
-    });
-    
-    uploadPromise = uploadStreamToS3Service(
-      readableStream,
-      filename,
-      mimeType,
-      userEmail
-    );
-  });
-  
+  );
+
   return new Promise((resolve) => {
-    busboy.on('finish', async () => {
+    busboy.on("finish", async () => {
       if (!uploadPromise) {
         resolve({
           success: false,
-          message: 'No image file found in the request'
+          message: "No image file found in the request",
         });
         return;
       }
-      
+
       const imageKey = await uploadPromise;
-      
+
       // Update user profile with new image URL
       await usersModel.findByIdAndUpdate(
         userData.id,
         { profilePic: imageKey },
         { new: true }
       );
-      
+
       // Delete previous image from S3 if it exists
       if (previousImageKey) {
         const s3Client = createS3Client();
         const deleteParams = {
           Bucket: process.env.AWS_BUCKET_NAME,
-          Key: previousImageKey
+          Key: previousImageKey,
         };
         try {
           await s3Client.send(new DeleteObjectCommand(deleteParams));
         } catch (deleteError) {
-          console.error('Error deleting previous image:', deleteError);
+          console.error("Error deleting previous image:", deleteError);
           // Continue execution even if delete fails
         }
       }
-      
+
       resolve({
         success: true,
-        message: 'Profile picture updated successfully',
-        data: { imageKey }
+        message: "Profile picture updated successfully",
+        data: { imageKey },
       });
     });
-    
+
     req.pipe(busboy);
   });
-}
+};
 
 export const myProfileServices = async (req: Request, res: Response) => {
   const userData = req.user as any;
 
-  // Get health data for weight and BMI
   const healthData = await healthDataModel
-    .findOne({
-      userId: userData.id,
-    })
+    .findOne({ userId: userData.id })
     .lean();
 
-  // Get all fasting records for the user
+  const fastingMethod = healthData?.fastingMethod || "16:8";
+
   const fastingRecords = await fastingRecordModel
-    .find({
-      userId: userData.id,
-      isFasting: true,
-    })
+    .find({ userId: userData.id, isFasting: true })
     .sort({ date: -1 })
     .lean();
 
   const caloryIntake = await trackUserMealModel
-    .find({
-      userId: userData.id,
-    })
+    .find({ userId: userData.id })
     .lean();
 
   fastingRecords.forEach((record) => {
@@ -810,10 +890,8 @@ export const myProfileServices = async (req: Request, res: Response) => {
     }
   });
 
-  // Calculate total fasts
   const totalFasts = fastingRecords.length;
 
-  // Calculate average of last 7 fasts in hours
   const last7Fasts = fastingRecords.slice(0, 7);
   const averageLast7Fasts =
     last7Fasts.length > 0
@@ -822,11 +900,10 @@ export const myProfileServices = async (req: Request, res: Response) => {
             (sum, fast) =>
               sum + parseInt(fast.fastingHours?.toString() || "16"),
             0
-          ) / last7Fasts.length
+          ) / 7
         )
       : 0;
 
-  // Find longest fast in hours
   const longestFast =
     fastingRecords.length > 0
       ? Math.max(
@@ -836,14 +913,46 @@ export const myProfileServices = async (req: Request, res: Response) => {
         )
       : 0;
 
-  // Calculate streaks
   let currentStreak = 0;
   let longestStreak = 0;
-  let tempStreak = 0;
 
-  if (fastingRecords.length > 0) {
-    const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0];
 
+  if (fastingMethod === "5:2") {
+    // --- 5:2 streak logic ---
+    let weekOffset = 0;
+    while (true) {
+      const refDate = new Date();
+      refDate.setDate(refDate.getDate() - weekOffset * 7);
+
+      const weekStart = new Date(refDate);
+      const day = weekStart.getDay();
+      weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1));
+      weekStart.setHours(0, 0, 0, 0);
+
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999);
+
+      const weekStartISO = weekStart.toISOString().split("T")[0];
+      const weekEndISO = weekEnd.toISOString().split("T")[0];
+
+      const count = fastingRecords.filter(
+        (record) => record.date >= weekStartISO && record.date <= weekEndISO
+      ).length;
+
+      if (count >= 2) {
+        currentStreak++;
+        weekOffset++;
+      } else {
+        break;
+      }
+    }
+
+    longestStreak = currentStreak; // For 5:2, we use week-based streak only
+  } else {
+    // --- Daily streak logic (16:8 etc) ---
+    let tempStreak = 0;
     for (let i = 0; i < fastingRecords.length; i++) {
       const currentDate = new Date(fastingRecords[i].date);
       const previousDate = i > 0 ? new Date(fastingRecords[i - 1].date) : null;
@@ -856,28 +965,18 @@ export const myProfileServices = async (req: Request, res: Response) => {
           (previousDate.getTime() - currentDate.getTime()) /
             (1000 * 60 * 60 * 24)
         );
-
         if (diffDays === 1) {
           tempStreak++;
-          if (i === 0) {
-            currentStreak = tempStreak;
-          }
+          if (i === 0) currentStreak = tempStreak;
         } else {
-          if (tempStreak > longestStreak) {
-            longestStreak = tempStreak;
-          }
+          if (tempStreak > longestStreak) longestStreak = tempStreak;
           tempStreak = 1;
         }
       }
     }
-
-    // Check one last time for the longest streak
-    if (tempStreak > longestStreak) {
-      longestStreak = tempStreak;
-    }
+    if (tempStreak > longestStreak) longestStreak = tempStreak;
   }
 
-  // Get recent fasts (last 10 records)
   const recentFasts = fastingRecords.slice(0, 10).map((fast) => ({
     date: fast.date,
     completed: true,
@@ -890,6 +989,7 @@ export const myProfileServices = async (req: Request, res: Response) => {
     message: "User details retrieved successfully",
     data: {
       totalFasts,
+      fastingMethod,
       averageLast7Fasts,
       longestFast,
       longestStreak,
@@ -1100,6 +1200,31 @@ export const changePasswordServices = async (req: Request, res: Response) => {
   return {
     success: true,
     message: "Password updated successfully",
+  };
+};
+
+export const logoutUserServices = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const { fcmToken } = req.body;
+
+  if (!fcmToken) {
+    return errorResponseHandler(
+      "FCM token is required",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Remove the FCM token from the user's fcmToken array
+  await usersModel.findByIdAndUpdate(
+    userData.id,
+    { $pull: { fcmToken } },
+    { new: true }
+  );
+
+  return {
+    success: true,
+    message: "User logged out successfully",
   };
 };
 

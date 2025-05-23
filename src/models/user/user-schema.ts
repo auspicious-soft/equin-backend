@@ -24,7 +24,7 @@ export interface UserDocument extends Document {
     | "trukish"
     | "korean";
   token?: string | null;
-  fcmToken?: string | null;
+  fcmToken?: string[];
   deviceId?: string | null;
   country?: string | null;
   subscription?: boolean;
@@ -97,8 +97,8 @@ const usersSchema = new mongoose.Schema<UserDocument>(
       default: null,
     },
     fcmToken: {
-      type: String,
-      default: null,
+      type: [String],
+      default: [],
     },
     country: {
       type: String,

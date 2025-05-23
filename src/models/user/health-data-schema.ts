@@ -11,6 +11,7 @@ export interface HealthDataDocument extends Document {
   otherDetails: any;
   deviceId: string;
   notification: boolean;
+  fastingMethod: string;
   mealReminder: boolean;
   appleHealth: boolean;
   waterReminder: boolean;

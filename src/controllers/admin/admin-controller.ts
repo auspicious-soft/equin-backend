@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import {
-  loginService,
+  // loginService,
   newPassswordAfterOTPVerifiedService,
   forgotPasswordService,
-  logoutService,
+  // logoutService,
   getAdminDetailsService,
   sendPushNotificationServices,
 } from "../../services/admin/admin-service";
@@ -13,7 +13,8 @@ import { httpStatusCode } from "../../lib/constant";
 export const login = async (req: Request, res: Response) => {
   try {
     console.log("req.body: ", req.body);
-    const response = await loginService(req.body, res);
+    // const response = await loginService(req.body, res);
+    const response = {};
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);
@@ -63,7 +64,8 @@ export const getAdminDetails = async (req: Request, res: Response) => {
 
 export const logoutEmployee = async (req: Request, res: Response) => {
   try {
-    const response = await logoutService(req.body, res);
+    // const response = await logoutService(req.body, res);
+    const response = {}
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);

@@ -8,6 +8,7 @@ import {
   getMealDateWise,
   getNutritionByImage,
   getUserSettings,
+  logoutUser,
   myPlan,
   myProfile,
   nutrition,
@@ -46,6 +47,7 @@ router.post("/update-profile-pic", updateUserProfilePhoto);
 router.get("/my-profile", myProfile);
 router.get("/get-meal-by-date", getMealDateWise);
 router.put("/change-password", changePassword);
+router.post("/logout-user", logoutUser);
 
 //*********************GPT ROUTES *******************************/
 

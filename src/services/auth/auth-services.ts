@@ -452,6 +452,10 @@ export const userSignInServices = async (
 
   user.token = await generateUserToken(user as any);
 
+  if(!user.fcmToken.includes(userData.fcmToken)){
+    user.fcmToken.push(userData.fcmToken);
+  }
+
   await user.save();
   return {
     success: true,

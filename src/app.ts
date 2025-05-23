@@ -8,8 +8,12 @@ import { admin, auth, stripe, user } from "./routes";
 // import admin from "firebase-admin"
 import bodyParser from "body-parser";
 import { checkAuth } from "./middleware/check-auth";
-import { handleStripeWebhook, stripeCancel, stripeSuccess } from "./controllers/stripe/stripe-controller";
-import { initializeReminderCrons } from './services/admin/reminder-scheduler';
+import {
+  handleStripeWebhook,
+  stripeCancel,
+  stripeSuccess,
+} from "./controllers/stripe/stripe-controller";
+import { initializeReminderCrons } from "./services/admin/reminder-scheduler";
 import { initializeFirebase } from "./utils/FCM/FCM";
 
 // Create __dirname equivalent for ES modules
@@ -24,13 +28,16 @@ const app = express();
 initializeReminderCrons();
 
 // Initialize firebase
-initializeFirebase()
+initializeFirebase();
 
 //*****************Stripe Routes*****************/
 //Need Raw Body
-app.post(`/webhook`, express.raw({ type: "application/json" }), handleStripeWebhook);
+app.post(
+  `/webhook`,
+  express.raw({ type: "application/json" }),
+  handleStripeWebhook
+);
 //*****************Stripe Routes*****************/
-
 
 app.use(express.json());
 app.set("trust proxy", true);
@@ -69,19 +76,16 @@ app.get("/", (_, res: any) => {
   res.send("Hello world entry point 🚀✅");
 });
 
-
 //*****************User Auth Routes**************/
-app.use("/api", auth)
+app.use("/api", auth);
 
 //*****************User Routes******************/
-app.use("/api",checkAuth, user)
-
+app.use("/api", checkAuth, user);
 
 //*****************Stripe Test Routes*****************/
-app.get('/success-test', stripeSuccess);
-app.get('/cancel-test', stripeCancel);
+app.get("/success-test", stripeSuccess);
+app.get("/cancel-test", stripeCancel);
 
-
-app.use('/api', checkAuth, stripe);
+app.use("/api", checkAuth, stripe);
 
 app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
