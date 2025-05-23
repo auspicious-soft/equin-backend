@@ -279,6 +279,8 @@ export const verifyOTPServices = async (payload: any, res: Response) => {
     deviceId: user?.deviceId,
   });
 
+  user.fcmToken = [payload.fcmToken];
+
   await user.save();
 
   return {
