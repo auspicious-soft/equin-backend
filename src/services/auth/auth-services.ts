@@ -79,7 +79,7 @@ export const createEssentialTipsServices = async (
 //************************* USER QUESTIONAIRE *************************/
 
 export const getQuestionsServices = async (payload: any, res: Response) => {
-  const {deviceId} = payload.params;
+  const { deviceId } = payload.params;
   const result = await questionModel.find().sort({ order: 1 });
   const questionResponse = await questionResponseModel.find({ deviceId });
   return {
@@ -128,6 +128,26 @@ export const saveAnswerServices = async (payload: any, res: Response) => {
         userId: null,
         deviceId,
         otherDetails: selectedOptionValues[0],
+      });
+    }
+  }
+
+  if (question?.order === 5) {
+    //if exist then update else create
+    const checkExist = await healthDataModel.findOne({
+      deviceId,
+    });
+
+    if (checkExist) {
+      await healthDataModel.updateOne(
+        { deviceId },
+        { fastingMethod: selectedOptionValues[0] === 18 ? "16:8" : "5:2" }
+      );
+    } else {
+      await healthDataModel.create({
+        userId: null,
+        deviceId,
+        fastingMethod: selectedOptionValues[0] === 18 ? "16:8" : "5:2",
       });
     }
   }
@@ -244,12 +264,12 @@ export const verifyOTPServices = async (payload: any, res: Response) => {
 
   await healthDataModel.updateOne(
     { deviceId: user?.deviceId, userId: null },
-    { $set: { userId: user?._id } }
+    { $set: { userId: user?._id, deviceId: null } }
   );
 
   await userPlanModel.updateOne(
     { deviceId: user?.deviceId, userId: null },
-    { $set: { userId: user?._id } }
+    { $set: { userId: user?._id, deviceId: null } }
   );
 
   await createSecurityNotification({

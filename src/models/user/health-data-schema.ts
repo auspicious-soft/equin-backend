@@ -67,6 +67,11 @@ const healthDataSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    fastingMethod:{
+      type: String,
+      enum: ["16:8", "5:2"],
+      default: "16:8",
+    },
     Language: {
       type: String,
       default: "english",
