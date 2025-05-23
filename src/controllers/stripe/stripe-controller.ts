@@ -4,6 +4,7 @@ import { errorParser } from "src/lib/errors/error-response-handler";
 import stripe from "src/config/stripe";
 import { pricePlanModel } from "src/models/admin/price-plan-schema";
 import { userPlanModel } from "src/models/user-plan/user-plan-schema";
+import { Client } from "twilio/lib/base/BaseTwilio";
 
 //********************Test Controllers*******************/
 export const stripeSuccess = async (req: Request, res: Response) => {
@@ -128,6 +129,7 @@ export const checkoutSession = async (req: Request, res: Response) => {
       data: {
         sessionId: session.id,
         url: session.url,
+        session: session,
         productDetails: {
           name: stripeProduct.name,
           description: stripeProduct.description,

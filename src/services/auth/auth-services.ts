@@ -238,7 +238,7 @@ export const verifyOTPServices = async (payload: any, res: Response) => {
 
   await questionResponseModel.updateMany(
     { deviceId: user?.deviceId, userId: null },
-    { $set: { userId: user?._id } },
+    { $set: { userId: user?._id, deviceId: null } },
     { multi: true }
   );
 
@@ -260,6 +260,7 @@ export const verifyOTPServices = async (payload: any, res: Response) => {
   });
 
   await user.save();
+
   return {
     success: true,
     data: sanitizeUser(user),
