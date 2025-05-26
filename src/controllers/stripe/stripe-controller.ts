@@ -68,7 +68,9 @@ export const checkoutSession = async (req: Request, res: Response) => {
       });
     }
 
+    console.log(`Creating checkout for product: ${productId}`);
     const stripeProduct = await stripe.products.retrieve(productId);
+    console.log(`Retrieved product: ${stripeProduct.name}`);
 
     if (!stripeProduct.default_price) {
       return res.status(httpStatusCode.BAD_REQUEST).json({
@@ -80,13 +82,9 @@ export const checkoutSession = async (req: Request, res: Response) => {
     const priceDetails = await stripe.prices.retrieve(
       stripeProduct.default_price as string
     );
-
-    if (!priceDetails.unit_amount || !priceDetails.currency) {
-      return res.status(httpStatusCode.BAD_REQUEST).json({
-        success: false,
-        message: "Price details are incomplete.",
-      });
-    }
+    console.log(
+      `Retrieved price: ${priceDetails.id}, ${priceDetails.unit_amount} ${priceDetails.currency}`
+    );
 
     // Find or create Stripe customer
     let customer;
@@ -96,11 +94,8 @@ export const checkoutSession = async (req: Request, res: Response) => {
     });
 
     if (existingCustomers.data.length > 0) {
-      customer = await stripe.customers.update(existingCustomers.data[0].id, {
-        metadata: {
-          userId: userData.id,
-        },
-      });
+      customer = existingCustomers.data[0];
+      console.log(`Using existing customer: ${customer.id}`);
     } else {
       customer = await stripe.customers.create({
         email,
@@ -108,38 +103,62 @@ export const checkoutSession = async (req: Request, res: Response) => {
           userId: userData.id,
         },
       });
+      console.log(`Created new customer: ${customer.id}`);
     }
 
-    // Create PaymentIntent
+    // Create a PaymentIntent for mobile clients
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: priceDetails.unit_amount,
+      amount: priceDetails.unit_amount ?? 0,
       currency: priceDetails.currency,
       customer: customer.id,
+      setup_future_usage: "off_session",
       metadata: {
         userId: userData.id,
-        productId,
+        productId: productId, // Explicitly use the productId from request
         priceId: priceDetails.id,
       },
       automatic_payment_methods: {
-        enabled: true, // Enables Apple Pay, Google Pay, etc.
+        enabled: true,
       },
     });
+    console.log(`Created payment intent: ${paymentIntent.id}`);
+
+    // Create a record in your database
+    const userPlan = await userPlanModel.create({
+      userId: userData.id,
+      stripeProductId: productId, // Explicitly use the productId from request
+      stripePriceId: priceDetails.id,
+      planName: stripeProduct.name,
+      price: priceDetails.unit_amount,
+      currency: priceDetails.currency,
+      interval: priceDetails.recurring?.interval,
+      intervalCount: priceDetails.recurring?.interval_count,
+      paymentStatus: "pending",
+      startDate: new Date(),
+      transactionId: paymentIntent.id,
+    });
+    console.log(`Created user plan record: ${userPlan._id}`);
 
     return res.status(httpStatusCode.OK).json({
       success: true,
       message: "PaymentIntent created successfully",
       data: {
         clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+        customer: customer.id,
         productDetails: {
+          id: productId, // Include the product ID in the response
           name: stripeProduct.name,
           description: stripeProduct.description,
           currency: priceDetails.currency,
           unitAmount: priceDetails.unit_amount,
           type: priceDetails.type,
+          interval: priceDetails.recurring?.interval,
         },
       },
     });
   } catch (error: any) {
+    console.error("Checkout session error:", error);
     const { code, message } = errorParser(error);
     return res
       .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
@@ -250,7 +269,17 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
     const sig = req.headers["stripe-signature"] as string;
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
+    // Log incoming webhook data for debugging
+    console.log("Webhook received:", {
+      headers: req.headers,
+      body:
+        typeof req.body === "string"
+          ? "(raw body)"
+          : JSON.stringify(req.body).substring(0, 100) + "...",
+    });
+
     if (!sig || !endpointSecret) {
+      console.error("Missing signature or endpoint secret");
       return res.status(httpStatusCode.BAD_REQUEST).json({
         success: false,
         message: "Stripe signature or endpoint secret missing",
@@ -260,251 +289,131 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
     let event;
 
     try {
+      // For webhooks, req.body should be raw, not parsed JSON
       event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+      console.log("Webhook event constructed:", event.type);
     } catch (err: any) {
+      console.error("Webhook signature verification failed:", err.message);
       return res.status(httpStatusCode.BAD_REQUEST).json({
         success: false,
         message: `Webhook Error: ${err.message}`,
       });
     }
 
+    // Log the event type and data for debugging
+    console.log(`Processing webhook event: ${event.type}`);
+    console.log(
+      "Event data:",
+      JSON.stringify(event.data.object).substring(0, 200) + "..."
+    );
+
+    // Handle different event types
     switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object as any;
-        const { userId, productId } = session.metadata;
+      case "payment_intent.succeeded": {
+        const paymentIntent = event.data.object as any;
+        console.log("Payment intent succeeded:", paymentIntent.id);
+        console.log("Metadata:", paymentIntent.metadata);
 
-        const existingPlan = await userPlanModel.findOne({
-          userId,
-          stripeProductId: productId,
-        });
-
-        if (existingPlan?.paymentStatus !== "pending") {
-          console.log("checkout.session.completed skipped: already processed");
+        // Make sure we have the required metadata
+        if (
+          !paymentIntent.metadata ||
+          !paymentIntent.metadata.userId ||
+          !paymentIntent.metadata.productId
+        ) {
+          console.error("Missing required metadata in payment intent");
           break;
         }
 
-        const product = await stripe.products.retrieve(productId);
-        const priceDetails = await stripe.prices.retrieve(
-          product.default_price as string
-        );
+        const { userId, productId, priceId } = paymentIntent.metadata;
 
-        let endDate = new Date();
-        if (priceDetails.recurring) {
-          const intervalCount = priceDetails.recurring.interval_count || 1;
-          switch (priceDetails.recurring.interval) {
-            case "day":
-              endDate.setDate(endDate.getDate() + intervalCount);
-              break;
-            case "week":
-              endDate.setDate(endDate.getDate() + intervalCount * 7);
-              break;
-            case "month":
-              endDate.setMonth(endDate.getMonth() + intervalCount);
-              break;
-            case "year":
-              endDate.setFullYear(endDate.getFullYear() + intervalCount);
-              break;
-          }
-        } else {
-          endDate.setDate(endDate.getDate() + 30);
-        }
+        // Find the pending user plan
+        const existingPlan = await userPlanModel.findOne({
+          userId,
+          stripeProductId: productId,
+          paymentStatus: "pending",
+        });
 
-        await userPlanModel.findOneAndUpdate(
-          {
-            userId,
-            stripeProductId: productId,
-            paymentStatus: "pending",
-          },
-          {
-            $set: {
+        if (!existingPlan) {
+          console.log(
+            `No pending plan found for user ${userId} and product ${productId}`
+          );
+
+          // Create a new plan if none exists
+          try {
+            // Get product details if we have a product ID
+            const product = await stripe.products.retrieve(productId);
+            const price = priceId
+              ? await stripe.prices.retrieve(priceId)
+              : product.default_price
+              ? await stripe.prices.retrieve(product.default_price as string)
+              : null;
+
+            if (!price) {
+              console.error("No price found for product", productId);
+              break;
+            }
+
+            // Calculate end date based on price recurring info
+            const endDate = new Date();
+            if (price.recurring) {
+              const { interval, interval_count } = price.recurring;
+              if (interval === "day")
+                endDate.setDate(endDate.getDate() + (interval_count || 1));
+              else if (interval === "week")
+                endDate.setDate(endDate.getDate() + (interval_count || 1) * 7);
+              else if (interval === "month")
+                endDate.setMonth(endDate.getMonth() + (interval_count || 1));
+              else if (interval === "year")
+                endDate.setFullYear(
+                  endDate.getFullYear() + (interval_count || 1)
+                );
+            } else {
+              // Default to 30 days for one-time payments
+              endDate.setDate(endDate.getDate() + 30);
+            }
+
+            // Create new user plan
+            await userPlanModel.create({
+              userId,
+              stripeProductId: productId,
+              stripePriceId: price.id,
+              planName: product.name,
+              price: price.unit_amount,
+              currency: price.currency,
+              interval: price.recurring?.interval,
+              intervalCount: price.recurring?.interval_count,
               paymentStatus: "success",
               startDate: new Date(),
-              endDate: endDate,
-              transactionId: session.payment_intent || session.subscription,
-              paymentMethod: "card",
-            },
+              endDate,
+              transactionId: paymentIntent.id,
+              paymentMethod: paymentIntent.payment_method_types?.[0] || "card",
+            });
+
+            console.log(
+              `Created new plan for user ${userId} and product ${productId}`
+            );
+          } catch (err) {
+            console.error("Error creating new plan:", err);
+          }
+          break;
+        }
+
+        // Update the existing plan
+        await userPlanModel.findByIdAndUpdate(existingPlan._id, {
+          $set: {
+            paymentStatus: "success",
+            transactionId: paymentIntent.id,
+            paymentMethod: paymentIntent.payment_method_types?.[0] || "card",
           },
-          { upsert: true, new: true }
+        });
+
+        console.log(
+          `Updated plan for user ${userId} and product ${productId} to success`
         );
         break;
       }
 
-      case "invoice.paid": {
-        const invoice = event.data.object as any;
-        const subscription = invoice.subscription;
-
-        if (subscription) {
-          const subscriptionDetails = await stripe.subscriptions.retrieve(
-            subscription
-          );
-          const metadata = subscriptionDetails.metadata;
-
-          if (metadata?.userId && metadata?.productId) {
-            const existingPlan = await userPlanModel.findOne({
-              userId: metadata.userId,
-              stripeProductId: metadata.productId,
-            });
-
-            if (existingPlan?.paymentStatus !== "pending") {
-              console.log("invoice.paid skipped: already processed");
-              break;
-            }
-
-            await userPlanModel.findOneAndUpdate(
-              {
-                userId: metadata.userId,
-                stripeProductId: metadata.productId,
-                paymentStatus: "pending",
-              },
-              {
-                $set: {
-                  paymentStatus: "success",
-                  endDate: new Date(
-                    subscriptionDetails.current_period_end * 1000
-                  ),
-                  transactionId: invoice.payment_intent,
-                  paymentMethod: invoice.payment_method_types?.[0] || "card",
-                },
-              }
-            );
-          }
-        }
-        break;
-      }
-
-      case "payment_intent.succeeded": {
-        const paymentIntent = event.data.object as any;
-        const metadata = paymentIntent.metadata;
-
-        if (metadata?.userId && metadata?.productId) {
-          const existingPlan = await userPlanModel.findOne({
-            userId: metadata.userId,
-            stripeProductId: metadata.productId,
-          });
-
-          if (existingPlan?.paymentStatus !== "pending") {
-            console.log("payment_intent.succeeded skipped: already processed");
-            break;
-          }
-
-          await userPlanModel.findOneAndUpdate(
-            {
-              userId: metadata.userId,
-              stripeProductId: metadata.productId,
-              paymentStatus: "pending",
-            },
-            {
-              $set: {
-                paymentStatus: "success",
-                startDate: new Date(),
-                transactionId: paymentIntent.id,
-                paymentMethod:
-                  paymentIntent.payment_method_types?.[0] || "card",
-              },
-            }
-          );
-        }
-        break;
-      }
-
-      case "payment_intent.payment_failed": {
-        const paymentIntent = event.data.object as any;
-        const metadata = paymentIntent.metadata;
-
-        if (metadata.userId && metadata.productId) {
-          await userPlanModel.findOneAndUpdate(
-            {
-              userId: metadata.userId,
-              stripeProductId: metadata.productId,
-              paymentStatus: "pending",
-            },
-            {
-              $set: {
-                paymentStatus: "failed",
-                transactionId: paymentIntent.id,
-              },
-            }
-          );
-        }
-        break;
-      }
-
-      case "customer.subscription.updated": {
-        const subscription = event.data.object as any;
-        const metadata = subscription.metadata;
-
-        if (metadata.userId && metadata.productId) {
-          const status =
-            subscription.status === "active" ? "success" : "failed";
-
-          await userPlanModel.findOneAndUpdate(
-            {
-              userId: metadata.userId,
-              stripeProductId: metadata.productId,
-            },
-            {
-              $set: {
-                paymentStatus: status,
-                endDate: new Date(subscription.current_period_end * 1000),
-              },
-            }
-          );
-        }
-        break;
-      }
-
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object as any;
-        const metadata = subscription.metadata;
-
-        if (metadata.userId && metadata.productId) {
-          // Don't delete the record, just mark it as expired
-          await userPlanModel.findOneAndUpdate(
-            {
-              userId: metadata.userId,
-              stripeProductId: metadata.productId,
-              paymentStatus: "success",
-            },
-            {
-              $set: {
-                paymentStatus: "expired",
-                endDate: new Date(), // Set end date to now
-              },
-            }
-          );
-        }
-        break;
-      }
-
-      case "invoice.payment_succeeded": {
-        const invoice = event.data.object as any;
-        const subscription = invoice.subscription;
-
-        if (subscription) {
-          const subscriptionDetails = await stripe.subscriptions.retrieve(
-            subscription
-          );
-          const metadata = subscriptionDetails.metadata;
-
-          if (metadata.userId && metadata.productId) {
-            await userPlanModel.findOneAndUpdate(
-              {
-                userId: metadata.userId,
-                stripeProductId: metadata.productId,
-              },
-              {
-                $set: {
-                  paymentStatus: "success",
-                  endDate: new Date(
-                    subscriptionDetails.current_period_end * 1000
-                  ),
-                },
-              }
-            );
-          }
-        }
-        break;
-      }
+      // Add other event handlers as needed
 
       default:
         console.log(`Unhandled event type: ${event.type}`);
@@ -515,6 +424,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       message: "Webhook handled successfully",
     });
   } catch (error: any) {
+    console.error("Webhook error:", error);
     const { code, message } = errorParser(error);
     return res
       .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
