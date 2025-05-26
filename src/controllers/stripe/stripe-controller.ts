@@ -73,7 +73,7 @@ export const checkoutSession = async (req: Request, res: Response) => {
     if (!stripeProduct.default_price) {
       return res.status(httpStatusCode.BAD_REQUEST).json({
         success: false,
-        message: "No price found for this product",
+        message: "No price found for this product.",
       });
     }
 
@@ -81,9 +81,17 @@ export const checkoutSession = async (req: Request, res: Response) => {
       stripeProduct.default_price as string
     );
 
+    if (!priceDetails.unit_amount || !priceDetails.currency) {
+      return res.status(httpStatusCode.BAD_REQUEST).json({
+        success: false,
+        message: "Price details are incomplete.",
+      });
+    }
+
+    // Find or create Stripe customer
     let customer;
     const existingCustomers = await stripe.customers.list({
-      email: email,
+      email,
       limit: 1,
     });
 
@@ -91,52 +99,43 @@ export const checkoutSession = async (req: Request, res: Response) => {
       customer = await stripe.customers.update(existingCustomers.data[0].id, {
         metadata: {
           userId: userData.id,
-          email,
         },
       });
     } else {
       customer = await stripe.customers.create({
-        email: email,
+        email,
         metadata: {
           userId: userData.id,
-          email,
         },
       });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: priceDetails.type === "recurring" ? "subscription" : "payment",
+    // Create PaymentIntent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: priceDetails.unit_amount,
+      currency: priceDetails.currency,
       customer: customer.id,
-      line_items: [
-        {
-          price: priceDetails.id, // Use the price ID directly
-          quantity: 1,
-        },
-      ],
-      success_url: `https://api.fastingvibe.com/success-test?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `https://api.fastingvibe.com/cancel-test`,
       metadata: {
         userId: userData.id,
         productId,
         priceId: priceDetails.id,
       },
+      automatic_payment_methods: {
+        enabled: true, // Enables Apple Pay, Google Pay, etc.
+      },
     });
 
     return res.status(httpStatusCode.OK).json({
       success: true,
-      message: "Checkout session created",
+      message: "PaymentIntent created successfully",
       data: {
-        sessionId: session.id,
-        url: session.url,
-        session: session,
+        clientSecret: paymentIntent.client_secret,
         productDetails: {
           name: stripeProduct.name,
           description: stripeProduct.description,
           currency: priceDetails.currency,
           unitAmount: priceDetails.unit_amount,
-          type: priceDetails.type, // 'one_time' or 'recurring'
-          interval: priceDetails.recurring?.interval, // 'month', 'year', etc. (if recurring)
+          type: priceDetails.type,
         },
       },
     });
