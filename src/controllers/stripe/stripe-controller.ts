@@ -399,12 +399,40 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
           break;
         }
 
-        // Update the existing plan
+        // Get product and price details to calculate end date
+        const product = await stripe.products.retrieve(productId);
+        const price = priceId
+          ? await stripe.prices.retrieve(priceId)
+          : product.default_price
+          ? await stripe.prices.retrieve(product.default_price as string)
+          : null;
+
+        // Calculate end date based on price recurring info
+        const startDate = new Date();
+        const endDate = new Date();
+        if (price && price.recurring) {
+          const { interval, interval_count } = price.recurring;
+          if (interval === "day")
+            endDate.setDate(endDate.getDate() + (interval_count || 1));
+          else if (interval === "week")
+            endDate.setDate(endDate.getDate() + (interval_count || 1) * 7);
+          else if (interval === "month")
+            endDate.setMonth(endDate.getMonth() + (interval_count || 1));
+          else if (interval === "year")
+            endDate.setFullYear(endDate.getFullYear() + (interval_count || 1));
+        } else {
+          // Default to 30 days for one-time payments
+          endDate.setDate(endDate.getDate() + 30);
+        }
+
+        // Update the existing plan with end date and payment details
         await userPlanModel.findByIdAndUpdate(existingPlan._id, {
           $set: {
             paymentStatus: "success",
             transactionId: paymentIntent.id,
             paymentMethod: paymentIntent.payment_method_types?.[0] || "card",
+            startDate: startDate,
+            endDate: endDate,
           },
         });
 
