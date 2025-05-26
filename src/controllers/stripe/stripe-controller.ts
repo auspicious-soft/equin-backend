@@ -136,6 +136,7 @@ export const checkoutSession = async (req: Request, res: Response) => {
       paymentStatus: "pending",
       startDate: new Date(),
       transactionId: paymentIntent.id,
+      planId: await getPlanIdFromProductId(productId), // Add planId field
     });
     console.log(`Created user plan record: ${userPlan._id}`);
 
@@ -485,4 +486,17 @@ export const cancelSubscription = async (req: Request, res: Response) => {
       .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: message || "An error occurred" });
   }
+};
+
+// Helper function to get planId from productId
+const getPlanIdFromProductId = async (productId: string) => {
+  const pricePlan = await pricePlanModel.findOne({ productId });
+  if (!pricePlan) {
+    throw new Error(JSON.stringify({
+      success: false,
+      message: "Price plan not found for the given product ID",
+      code: httpStatusCode.NOT_FOUND
+    }));
+  }
+  return pricePlan._id;
 };
