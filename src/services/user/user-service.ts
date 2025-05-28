@@ -1540,17 +1540,22 @@ export const getNutritionByImageServices = async (
   res: Response
 ) => {
   const userData = req.user as any;
+  const file = req.file;
+    if (!file) {
+    return errorResponseHandler("Image file is required", httpStatusCode.BAD_REQUEST, res);
+  }
   const { imageUrl } = req.body;
 
-  if (!imageUrl) {
-    return errorResponseHandler(
-      "Image URL is required",
-      httpStatusCode.BAD_REQUEST,
-      res
-    );
-  }
+  // if (!imageUrl) {
+  //   return errorResponseHandler(
+  //     "Image URL is required",
+  //     httpStatusCode.BAD_REQUEST,
+  //     res
+  //   );
+  // }
 
   try {
+    const base64Image = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
     // Call OpenAI API with the image
     const response = await openai.chat.completions.create({
       model: "gpt-4-turbo", // Using vision model to analyze images
@@ -1558,19 +1563,19 @@ export const getNutritionByImageServices = async (
         {
           role: "system",
           content:
-            "You are a nutritionist AI. Extract food items and estimate their calorie and protein content. Return structured JSON only with no text included. Example {carbs: in gms, protein: in gms, fat: in gms}",
+            "You are a nutritionist AI. Extract food items and estimate their calorie and protein content. Return structured JSON only with no text included. Example {carbs: in gms, protein: in gms, fat: in gms, microNutrients: {fiber: in mg, sugar: in mg, sodium: in mg, potassium: in mg, calcium: in mg, iron: in mg, vitaminA: in mg, vitaminC: in mg, vitaminD: in mg, vitaminE: in mg, vitaminK: in mg, vitaminB1: in mg, vitaminB2: in mg, vitaminB3: in mg}}",
         },
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: "Return a JSON by extracting nutritional information from the image in this format {carbs: in gms, protein: in gms, fat: in gms, status: true}",
+              text: "Return a JSON by extracting nutritional information from the image in this format {carbs: in gms, protein: in gms, fat: in gms, status: true, microNutrients: {fiber: in mg, sugar: in mg, sodium: in mg, potassium: in mg, calcium: in mg, iron: in mg, vitaminA: in mg, vitaminC: in mg, vitaminD: in mg, vitaminE: in mg, vitaminK: in mg, vitaminB1: in mg, vitaminB2: in mg, vitaminB3: in mg}}",
             },
             {
               type: "image_url",
               image_url: {
-                url: imageUrl,
+                url: base64Image,
               },
             },
           ],
@@ -1602,7 +1607,7 @@ export const getNutritionByImageServices = async (
       userId: userData.id,
       role: "user",
       modelUsed: "gpt-4-turbo",
-      imageUrl,
+      imageUrl:null,
       content: JSON.stringify(nutritionData),
     });
 

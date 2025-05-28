@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { cancelSubscription } from "src/controllers/stripe/stripe-controller";
+import multer from "multer";
 import {
   changePassword,
   chatWithGPT,
@@ -54,6 +55,8 @@ router.get("/get-privacy-and-contact-support", getPrivacyAndContactSupport);
 //*********************GPT ROUTES *******************************/
 
 router.route("/chat-with-gpt").post(chatWithGPT).get(getChatHistory);
-router.post("/get-nutrition-by-image", getNutritionByImage)
+
+const upload = multer({ storage: multer.memoryStorage() });
+router.post("/get-nutrition-by-image",upload.single("image"), getNutritionByImage)
 
 export { router };

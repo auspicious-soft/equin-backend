@@ -8,6 +8,7 @@ export interface TrackUserMealDocument extends Document {
   thirdMealStatus: any;
   otherMealStatus: any;
   planDay: Date;
+  microNutrients: any;
 }
 
 const trackUserMealSchema = new mongoose.Schema(
@@ -39,6 +40,10 @@ const trackUserMealSchema = new mongoose.Schema(
         type: Boolean,
         default: false,
       },
+      microNutrients: {
+        type: Object,
+        default: null,
+      },
     },
     secondMealStatus: {
       carbs: {
@@ -56,6 +61,10 @@ const trackUserMealSchema = new mongoose.Schema(
       status: {
         type: Boolean,
         default: false,
+      },
+      microNutrients: {
+        type: Object,
+        default: null,
       },
     },
     thirdMealStatus: {
@@ -75,6 +84,10 @@ const trackUserMealSchema = new mongoose.Schema(
         type: Boolean,
         default: false,
       },
+      microNutrients: {
+        type: Object,
+        default: null,
+      },
     },
     otherMealStatus: {
       carbs: {
@@ -92,6 +105,10 @@ const trackUserMealSchema = new mongoose.Schema(
       status: {
         type: Boolean,
         default: false,
+      },
+      microNutrients: {
+        type: Object,
+        default: null,
       },
     },
     planDay: {
