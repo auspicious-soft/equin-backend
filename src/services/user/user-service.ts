@@ -589,89 +589,114 @@ export const nutritionServices = async (req: Request, res: Response) => {
       })
       .populate("planId")
       .lean();
-      
+
     if (todayMeal) {
       // Calculate calories for each meal
-      const firstMealCalories = todayMeal.firstMealStatus.status ? 
-        (todayMeal.firstMealStatus.carbs * 4 + 
-         todayMeal.firstMealStatus.protein * 4 + 
-         todayMeal.firstMealStatus.fat * 9) : 0;
-         
-      const secondMealCalories = todayMeal.secondMealStatus.status ? 
-        (todayMeal.secondMealStatus.carbs * 4 + 
-         todayMeal.secondMealStatus.protein * 4 + 
-         todayMeal.secondMealStatus.fat * 9) : 0;
-         
-      const thirdMealCalories = todayMeal.thirdMealStatus.status ? 
-        (todayMeal.thirdMealStatus.carbs * 4 + 
-         todayMeal.thirdMealStatus.protein * 4 + 
-         todayMeal.thirdMealStatus.fat * 9) : 0;
-      
+      const firstMealCalories = todayMeal.firstMealStatus.status
+        ? todayMeal.firstMealStatus.carbs * 4 +
+          todayMeal.firstMealStatus.protein * 4 +
+          todayMeal.firstMealStatus.fat * 9
+        : 0;
+
+      const secondMealCalories = todayMeal.secondMealStatus.status
+        ? todayMeal.secondMealStatus.carbs * 4 +
+          todayMeal.secondMealStatus.protein * 4 +
+          todayMeal.secondMealStatus.fat * 9
+        : 0;
+
+      const thirdMealCalories = todayMeal.thirdMealStatus.status
+        ? todayMeal.thirdMealStatus.carbs * 4 +
+          todayMeal.thirdMealStatus.protein * 4 +
+          todayMeal.thirdMealStatus.fat * 9
+        : 0;
+
       // Add calories to each meal status
       todayMeal.firstMealStatus.calories = firstMealCalories;
       todayMeal.secondMealStatus.calories = secondMealCalories;
       todayMeal.thirdMealStatus.calories = thirdMealCalories;
-      
+
       // Calculate total consumed nutrients
-      const consumedCarbs = 
-        (todayMeal.firstMealStatus.status ? todayMeal.firstMealStatus.carbs : 0) +
-        (todayMeal.secondMealStatus.status ? todayMeal.secondMealStatus.carbs : 0) +
-        (todayMeal.thirdMealStatus.status ? todayMeal.thirdMealStatus.carbs : 0);
-        
-      const consumedProtein = 
-        (todayMeal.firstMealStatus.status ? todayMeal.firstMealStatus.protein : 0) +
-        (todayMeal.secondMealStatus.status ? todayMeal.secondMealStatus.protein : 0) +
-        (todayMeal.thirdMealStatus.status ? todayMeal.thirdMealStatus.protein : 0);
-        
-      const consumedFat = 
+      const consumedCarbs =
+        (todayMeal.firstMealStatus.status
+          ? todayMeal.firstMealStatus.carbs
+          : 0) +
+        (todayMeal.secondMealStatus.status
+          ? todayMeal.secondMealStatus.carbs
+          : 0) +
+        (todayMeal.thirdMealStatus.status
+          ? todayMeal.thirdMealStatus.carbs
+          : 0);
+
+      const consumedProtein =
+        (todayMeal.firstMealStatus.status
+          ? todayMeal.firstMealStatus.protein
+          : 0) +
+        (todayMeal.secondMealStatus.status
+          ? todayMeal.secondMealStatus.protein
+          : 0) +
+        (todayMeal.thirdMealStatus.status
+          ? todayMeal.thirdMealStatus.protein
+          : 0);
+
+      const consumedFat =
         (todayMeal.firstMealStatus.status ? todayMeal.firstMealStatus.fat : 0) +
-        (todayMeal.secondMealStatus.status ? todayMeal.secondMealStatus.fat : 0) +
+        (todayMeal.secondMealStatus.status
+          ? todayMeal.secondMealStatus.fat
+          : 0) +
         (todayMeal.thirdMealStatus.status ? todayMeal.thirdMealStatus.fat : 0);
-      
+
       // Calculate target nutrients (from meal plan if available)
       let targetCarbs = 0;
       let targetProtein = 0;
       let targetFat = 0;
-      
+
       // Extract target nutrients from meal plan if available
       if (todayMeal.planId && (todayMeal.planId as any).meals) {
         const meals = (todayMeal.planId as any).meals;
         // Estimate macros based on calories (rough estimation)
         // Assuming 50% carbs, 30% protein, 20% fat distribution
-        const totalCaloriesStr = (todayMeal.planId as any).total_calories || "0";
+        const totalCaloriesStr =
+          (todayMeal.planId as any).total_calories || "0";
         const totalCalories = parseInt(totalCaloriesStr.replace(/\D/g, ""));
-        
+
         targetCarbs = Math.round((totalCalories * 0.5) / 4); // 50% of calories from carbs
         targetProtein = Math.round((totalCalories * 0.3) / 4); // 30% of calories from protein
         targetFat = Math.round((totalCalories * 0.2) / 9); // 20% of calories from fat
       }
-      
+
       // Calculate percentages
-      const carbsPercentage = targetCarbs > 0 ? Math.round((consumedCarbs / targetCarbs) * 100) : 0;
-      const proteinPercentage = targetProtein > 0 ? Math.round((consumedProtein / targetProtein) * 100) : 0;
-      const fatPercentage = targetFat > 0 ? Math.round((consumedFat / targetFat) * 100) : 0;
-      const overallPercentage = Math.round((carbsPercentage + proteinPercentage + fatPercentage) / 3);
-      
+      const carbsPercentage =
+        targetCarbs > 0 ? Math.round((consumedCarbs / targetCarbs) * 100) : 0;
+      const proteinPercentage =
+        targetProtein > 0
+          ? Math.round((consumedProtein / targetProtein) * 100)
+          : 0;
+      const fatPercentage =
+        targetFat > 0 ? Math.round((consumedFat / targetFat) * 100) : 0;
+      const overallPercentage = Math.round(
+        (carbsPercentage + proteinPercentage + fatPercentage) / 3
+      );
+
       // Add stats to response
       (todayMeal as any).stats = {
         carbs: {
           target: targetCarbs,
           consumed: consumedCarbs,
-          percentage: carbsPercentage
+          percentage: carbsPercentage,
         },
         protein: {
           target: targetProtein,
           consumed: consumedProtein,
-          percentage: proteinPercentage
+          percentage: proteinPercentage,
         },
         fat: {
           target: targetFat,
           consumed: consumedFat,
-          percentage: fatPercentage
+          percentage: fatPercentage,
         },
         overall: {
-          percentage: overallPercentage
-        }
+          percentage: overallPercentage,
+        },
       };
     }
   } else {
@@ -715,9 +740,9 @@ export const updateMealTrackerService = async (req: Request, res: Response) => {
   }
 
   // Validate payload
-  if (!mealId || !finishedMeal) {
+  if (!finishedMeal) {
     return errorResponseHandler(
-      "mealId and finishedMeal are required",
+      "finishedMeal is required", // Fixed typo from "fnishedMeal"
       httpStatusCode.BAD_REQUEST,
       res
     );
@@ -727,7 +752,7 @@ export const updateMealTrackerService = async (req: Request, res: Response) => {
   const validMealTypes = ["first", "second", "third", "other"];
   if (!validMealTypes.includes(finishedMeal)) {
     return errorResponseHandler(
-      "finishedMeal must be one of: first, second, third",
+      "finishedMeal must be one of: first, second, third, other", // Added "other" to error message
       httpStatusCode.BAD_REQUEST,
       res
     );
@@ -736,41 +761,83 @@ export const updateMealTrackerService = async (req: Request, res: Response) => {
   // Get today's date at midnight for accurate comparison
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
+  
   // Create the update object dynamically
   const updateField = `${finishedMeal}MealStatus`;
 
-  // Find and update the meal tracking record
-  const updatedMeal = await trackUserMealModel
-    .findOneAndUpdate(
-      {
-        userId: userData.id,
-        _id: mealId,
-        planDay: {
-          $gte: today,
-          $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000), // Less than tomorrow
+  if (mealId) {
+    // Code for users with meal ID remains the same
+    const updatedMeal = await trackUserMealModel
+      .findOneAndUpdate(
+        {
+          userId: userData.id,
+          _id: mealId,
+          planDay: {
+            $gte: today,
+            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+          },
         },
-      },
-      {
-        $set: { [updateField]: data },
-      },
-      { new: true }
-    )
-    .populate("planId");
+        {
+          $set: { [updateField]: data },
+        },
+        { new: true }
+      )
+      .populate("planId");
 
-  if (!updatedMeal) {
-    return errorResponseHandler(
-      "No meal tracking record found for today",
-      httpStatusCode.NOT_FOUND,
-      res
-    );
+    if (!updatedMeal) {
+      return errorResponseHandler(
+        "No meal tracking record found for today",
+        httpStatusCode.NOT_FOUND,
+        res
+      );
+    }
+
+    return {
+      success: true,
+      message: "Meal status updated successfully",
+      data: updatedMeal,
+    };
+  } else {
+    // For users without a meal ID (no active plan)
+    const checkExist = await trackUserMealModel.findOne({
+      userId: userData.id,
+      planDay: {
+        $gte: today,
+        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+      },
+    }).lean();
+
+    let response;
+
+    if (checkExist) {
+      // Update existing record
+      response = await trackUserMealModel.findOneAndUpdate(
+        { _id: checkExist._id, userId: userData.id },
+        {
+          $set: {
+            [updateField]: data,
+          },
+        },
+        { new: true }
+      );
+    } else {
+      // Create new record with initial meal data
+      const initialData = {
+        userId: userData.id,
+        planId: null,
+        planDay: today,
+        [updateField]: data // Set the specific meal data immediately
+      };
+      
+      response = await trackUserMealModel.create(initialData);
+    }
+
+    return {
+      success: true,
+      message: "Meal status updated successfully",
+      data: response,
+    };
   }
-
-  return {
-    success: true,
-    message: "Meal status updated successfully",
-    data: updatedMeal,
-  };
 };
 
 //**************User Settings
@@ -1578,7 +1645,9 @@ export const getPrivacyAndContactSupportServices = async (
   }
 
   if (type === "contact") {
-    const contactSupport = await contactSupportModel.findOne({ isActive: true });
+    const contactSupport = await contactSupportModel.findOne({
+      isActive: true,
+    });
     return {
       success: true,
       message: "Data retrieved successfully",
