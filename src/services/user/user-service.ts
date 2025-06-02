@@ -639,6 +639,8 @@ export const nutritionServices = async (req: Request, res: Response) => {
     .populate("planId")
     .lean();
 
+  let todayMeal;
+
   // Default meal status structure
   const defaultMealStatus = {
     carbs: 0,
@@ -647,48 +649,114 @@ export const nutritionServices = async (req: Request, res: Response) => {
     status: false,
   };
 
-  // Prepare the meal data to upsert
-  const mealData = {
-    userId: userData.id,
-    planDay: todayUTC,
-    firstMealStatus: defaultMealStatus,
-    secondMealStatus: defaultMealStatus,
-    thirdMealStatus: defaultMealStatus,
-    otherMealStatus: defaultMealStatus,
-  };
-
-  // Add planId only if active plan exists
-  if (activePlan && activePlan.planId) {
-    (mealData as any).planId = activePlan.planId._id;
-  }
-
-  // Use findOneAndUpdate with upsert to prevent duplicates
-  // This is atomic and will either find existing or create new
-  const todayMeal = await trackUserMealModel
-    .findOneAndUpdate(
-      {
-        userId: userData.id,
-        planDay: {
-          $gte: todayUTC,
-          $lt: tomorrowUTC,
-        },
+  // Step 1: Try to find existing meal record first
+  todayMeal = await trackUserMealModel
+    .findOne({
+      userId: userData.id,
+      planDay: {
+        $gte: todayUTC,
+        $lt: tomorrowUTC,
       },
-      {
-        $setOnInsert: mealData, // Only set these fields if creating new document
-        $set: {
-          // Always update planId if active plan exists
-          ...(activePlan &&
-            activePlan.planId && { planId: activePlan.planId._id }),
-        },
-      },
-      {
-        upsert: true, // Create if doesn't exist
-        new: true, // Return the updated/created document
-        runValidators: true,
-      }
-    )
+    })
     .populate("planId")
     .lean();
+
+  // Step 2: If no existing meal found, create one using findOneAndUpdate with upsert
+  if (!todayMeal) {
+    // Prepare the meal data to upsert
+    const mealData = {
+      userId: userData.id,
+      planDay: todayUTC,
+      firstMealStatus: defaultMealStatus,
+      secondMealStatus: defaultMealStatus,
+      thirdMealStatus: defaultMealStatus,
+      otherMealStatus: defaultMealStatus,
+    };
+
+    // Add planId only if active plan exists
+    if (activePlan && activePlan.planId) {
+      (mealData as any).planId = activePlan.planId._id;
+    }
+
+    try {
+      // Use findOneAndUpdate with upsert - this is atomic and prevents race conditions
+      todayMeal = await trackUserMealModel
+        .findOneAndUpdate(
+          {
+            userId: userData.id,
+            planDay: {
+              $gte: todayUTC,
+              $lt: tomorrowUTC,
+            },
+          },
+          {
+            $setOnInsert: mealData, // Only set these fields if creating new document
+          },
+          {
+            upsert: true, // Create if doesn't exist
+            new: true, // Return the updated/created document
+            runValidators: true,
+          }
+        )
+        .populate("planId")
+        .lean();
+    } catch (error: any) {
+      // Handle potential duplicate key error (in case of race condition)
+      if (error.code === 11000 || error.message?.includes('duplicate') || error.message?.includes('E11000')) {
+        // If duplicate error occurs, fetch the existing record that was created by concurrent request
+        todayMeal = await trackUserMealModel
+          .findOne({
+            userId: userData.id,
+            planDay: {
+              $gte: todayUTC,
+              $lt: tomorrowUTC,
+            },
+          })
+          .populate("planId")
+          .lean();
+      } else {
+        // Re-throw other errors
+        throw error;
+      }
+    }
+
+    // Step 3: Final safety check - if still no meal found, something went wrong
+    if (!todayMeal) {
+      // Last resort: try a simple create (this should rarely happen)
+      try {
+        const newMeal = await trackUserMealModel.create(mealData);
+        todayMeal = await trackUserMealModel
+          .findById(newMeal._id)
+          .populate("planId")
+          .lean();
+      } catch (createError: any) {
+        // If this also fails due to duplicate, just fetch the existing one
+        if (createError.code === 11000) {
+          todayMeal = await trackUserMealModel
+            .findOne({
+              userId: userData.id,
+              planDay: {
+                $gte: todayUTC,
+                $lt: tomorrowUTC,
+              },
+            })
+            .populate("planId")
+            .lean();
+        } else {
+          throw createError;
+        }
+      }
+    }
+  }
+
+  // Step 4: Update planId if there's an active plan but meal doesn't have planId
+  if (activePlan && activePlan.planId && !todayMeal?.planId) {
+    await trackUserMealModel.updateOne(
+      { _id: todayMeal?._id },
+      { planId: activePlan.planId._id }
+    );
+    (todayMeal as any).planId = activePlan.planId;
+  }
 
   // Initialize any missing meal status fields (defensive programming)
   const mealStatusFields = [
@@ -698,33 +766,43 @@ export const nutritionServices = async (req: Request, res: Response) => {
     "otherMealStatus",
   ];
 
-  mealStatusFields.forEach((field : any) => {
+  mealStatusFields.forEach((field: any) => {
     if (!(todayMeal as any)[field]) {
-      (todayMeal as any)[field] = defaultMealStatus;
+      (todayMeal as any)[field] = { ...defaultMealStatus };
     }
   });
 
   // Calculate calories for each meal
   const calculateMealCalories = (mealStatus: any) => {
-    return mealStatus.status
-      ? mealStatus.carbs * 4 + mealStatus.protein * 4 + mealStatus.fat * 9
+    return mealStatus && mealStatus.status
+      ? (mealStatus.carbs || 0) * 4 + (mealStatus.protein || 0) * 4 + (mealStatus.fat || 0) * 9
       : 0;
   };
 
-  const firstMealCalories = calculateMealCalories(todayMeal.firstMealStatus);
-  const secondMealCalories = calculateMealCalories(todayMeal.secondMealStatus);
-  const thirdMealCalories = calculateMealCalories(todayMeal.thirdMealStatus);
+  const firstMealCalories = calculateMealCalories(todayMeal?.firstMealStatus);
+  const secondMealCalories = calculateMealCalories(todayMeal?.secondMealStatus);
+  const thirdMealCalories = calculateMealCalories(todayMeal?.thirdMealStatus);
+  const otherMealCalories = calculateMealCalories(todayMeal?.otherMealStatus);
 
   // Add calories to each meal status
-  todayMeal.firstMealStatus.calories = firstMealCalories;
-  todayMeal.secondMealStatus.calories = secondMealCalories;
-  todayMeal.thirdMealStatus.calories = thirdMealCalories;
+  if (todayMeal && todayMeal.firstMealStatus) {
+    todayMeal.firstMealStatus.calories = firstMealCalories;
+  }
+  if( todayMeal && todayMeal.secondMealStatus) {
+    todayMeal.secondMealStatus.calories = secondMealCalories;
+  }
+  if( todayMeal && todayMeal.thirdMealStatus) {
+    todayMeal.thirdMealStatus.calories = thirdMealCalories;
+  }
+  if( todayMeal && todayMeal.otherMealStatus) {
+    todayMeal.otherMealStatus.calories = otherMealCalories; // Assuming otherMealStatus doesn't have calories
+  }
 
   // Calculate total consumed nutrients
   const calculateConsumedNutrient = (nutrient: string) => {
     return mealStatusFields.reduce((total, field) => {
       const mealStatus = (todayMeal as any)[field];
-      return total + (mealStatus.status ? mealStatus[nutrient] : 0);
+      return total + (mealStatus && mealStatus.status ? (mealStatus[nutrient] || 0) : 0);
     }, 0);
   };
 
@@ -738,13 +816,15 @@ export const nutritionServices = async (req: Request, res: Response) => {
   let targetFat = 0;
 
   // Extract target nutrients from meal plan if available
-  if (todayMeal.planId && (todayMeal.planId as any).meals) {
+  if (todayMeal?.planId && (todayMeal.planId as any).meals) {
     const totalCaloriesStr = (todayMeal.planId as any).total_calories || "0";
-    const totalCalories = parseInt(totalCaloriesStr.replace(/\D/g, ""));
+    const totalCalories = parseInt(totalCaloriesStr.replace(/\D/g, "")) || 0;
 
-    targetCarbs = Math.round((totalCalories * 0.5) / 4); // 50% of calories from carbs
-    targetProtein = Math.round((totalCalories * 0.3) / 4); // 30% of calories from protein
-    targetFat = Math.round((totalCalories * 0.2) / 9); // 20% of calories from fat
+    if (totalCalories > 0) {
+      targetCarbs = Math.round((totalCalories * 0.5) / 4); // 50% of calories from carbs
+      targetProtein = Math.round((totalCalories * 0.3) / 4); // 30% of calories from protein
+      targetFat = Math.round((totalCalories * 0.2) / 9); // 20% of calories from fat
+    }
   }
 
   // Calculate percentages
