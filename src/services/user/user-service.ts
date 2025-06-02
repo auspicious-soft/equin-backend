@@ -415,21 +415,6 @@ export const myPlanService = async (req: Request, res: Response) => {
       .populate("planId")
       .lean();
 
-    console.log(
-      `User ${userData.id} checking for active plan at ${today.toISOString()}`
-    );
-    console.log(
-      `Found plan: ${
-        activePlan
-          ? JSON.stringify({
-              id: activePlan._id,
-              startDate: activePlan.startDate,
-              endDate: activePlan.endDate,
-              status: activePlan.paymentStatus,
-            })
-          : "No active plan"
-      }`
-    );
 
     const essentialTips = await essentialTipModel
       .find({
@@ -556,7 +541,7 @@ export const myPlanService = async (req: Request, res: Response) => {
       mealPlan = await pricePlanModel.find();
     }
 
-    return res.status(200).json({
+    return {
       success: true,
       message: activePlan?.planId
         ? "Active plan found"
@@ -566,7 +551,7 @@ export const myPlanService = async (req: Request, res: Response) => {
         plan: mealTracking || mealPlan,
         essentialTips,
       },
-    });
+    };
   } catch (error) {
     console.error("Error in myPlanService:", error);
     return res.status(500).json({
