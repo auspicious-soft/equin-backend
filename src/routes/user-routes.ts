@@ -9,11 +9,13 @@ import {
   getMealDateWise,
   getNutritionByImage,
   getPrivacyAndContactSupport,
+  getRating,
   getUserSettings,
   logoutUser,
   myPlan,
   myProfile,
   nutrition,
+  rateApp,
   savePricePlan,
   saveWaterRecord,
   updateMealTracker,
@@ -22,6 +24,7 @@ import {
   userHome,
   waterTracker,
 } from "src/controllers/user/user-controller";
+
 
 const router = Router();
 
@@ -51,6 +54,7 @@ router.get("/get-meal-by-date", getMealDateWise);
 router.put("/change-password", changePassword);
 router.post("/logout-user", logoutUser);
 router.get("/get-privacy-and-contact-support", getPrivacyAndContactSupport);
+router.route("/rate-app").post(rateApp).get(getRating)
 
 //*********************GPT ROUTES *******************************/
 
