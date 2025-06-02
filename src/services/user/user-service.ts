@@ -31,6 +31,7 @@ import {
   getTodayUTC,
   getTomorrowUTC,
   getDateMidnightUTC,
+  debugDateComparison,
 } from "src/utils/date-utils";
 
 configDotenv();
@@ -412,13 +413,14 @@ export const myPlanService = async (req: Request, res: Response) => {
     .populate("planId")
     .lean();
 
-  // Log for debugging
-  console.log(
-    `User ${userData.id} active plan check:`,
-    activePlan
-      ? `Found plan with ID ${activePlan.planId?._id || "missing planId"}`
-      : "No active plan"
-  );
+  // Add debug logging to help diagnose issues
+  console.log(`User ${userData.id} checking for active plan at ${currentDate.toISOString()}`);
+  console.log(`Found plan: ${activePlan ? JSON.stringify({
+    id: activePlan._id,
+    startDate: activePlan.startDate,
+    endDate: activePlan.endDate,
+    status: activePlan.paymentStatus
+  }) : 'No active plan'}`);
 
   const essentialTips = await essentialTipModel
     .find({
@@ -1777,3 +1779,47 @@ export const getRatingServices = async (req: Request, res: Response) => {
 };
 
 //*****************************FOR EQUIN APP *********************************/
+
+/**
+ * Helper function to check if a user has an active plan
+ * @param userId User ID to check
+ * @returns Active plan or null
+ */
+export const checkActivePlan = async (userId: string) => {
+  const currentDate = getTodayUTC();
+  
+  // Find all plans for the user to debug
+  const allPlans = await userPlanModel
+    .find({
+      userId,
+    })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .lean();
+    
+  console.log(`User ${userId} has ${allPlans.length} recent plans`);
+  
+  // Log details of each plan for debugging
+  allPlans.forEach(plan => {
+    debugDateComparison(
+      userId,
+      plan._id.toString(),
+      plan.startDate,
+      plan.endDate,
+      currentDate
+    );
+  });
+  
+  // Find active plan with proper date comparison
+  const activePlan = await userPlanModel
+    .findOne({
+      userId,
+      startDate: { $lte: currentDate },
+      endDate: { $gte: currentDate },
+      paymentStatus: "success",
+    })
+    .populate("planId")
+    .lean();
+    
+  return activePlan;
+};

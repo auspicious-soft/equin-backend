@@ -28,9 +28,7 @@ export const getTomorrowUTC = (): Date => {
  * @returns Date object set to 00:00:00.000 UTC for the given date
  */
 export const getDateMidnightUTC = (date: Date): Date => {
-  const newDate = new Date(date);
-  newDate.setUTCHours(0, 0, 0, 0);
-  return newDate;
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 };
 
 /**
@@ -53,4 +51,30 @@ export const addDaysUTC = (date: Date, days: number): Date => {
  */
 export const formatDateUTC = (date: Date): string => {
   return date.toISOString().split('T')[0];
+};
+
+/**
+ * Utility to debug date comparison issues
+ * @param userId User ID for logging
+ * @param planId Plan ID for logging
+ * @param startDate Plan start date
+ * @param endDate Plan end date
+ * @param currentDate Current date being compared
+ */
+export const debugDateComparison = (
+  userId: string,
+  planId: string,
+  startDate: Date | null,
+  endDate: Date | null,
+  currentDate: Date
+): void => {
+  console.log(`[DATE DEBUG] User: ${userId}, Plan: ${planId}`);
+  console.log(`[DATE DEBUG] Start: ${startDate?.toISOString() || 'null'}`);
+  console.log(`[DATE DEBUG] End: ${endDate?.toISOString() || 'null'}`);
+  console.log(`[DATE DEBUG] Current: ${currentDate.toISOString()}`);
+  
+  if (startDate && endDate) {
+    console.log(`[DATE DEBUG] Is current >= start? ${currentDate >= startDate}`);
+    console.log(`[DATE DEBUG] Is current <= end? ${currentDate <= endDate}`);
+  }
 };

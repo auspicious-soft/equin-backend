@@ -6,6 +6,7 @@ import { pricePlanModel } from "src/models/admin/price-plan-schema";
 import { userPlanModel } from "src/models/user-plan/user-plan-schema";
 import { Client } from "twilio/lib/base/BaseTwilio";
 
+
 //********************Test Controllers*******************/
 export const stripeSuccess = async (req: Request, res: Response) => {
   try {
@@ -134,7 +135,7 @@ export const checkoutSession = async (req: Request, res: Response) => {
       interval: priceDetails.recurring?.interval,
       intervalCount: priceDetails.recurring?.interval_count,
       paymentStatus: "pending",
-      startDate: new Date(),
+      startDate: getTodayUTC(), // Use UTC date instead of local date
       transactionId: paymentIntent.id,
       planId: await getPlanIdFromProductId(productId), // Add planId field
     });
