@@ -131,7 +131,31 @@ export const getQuestionsServices = async (payload: any, res: Response) => {
   };
 };
 export const getPlanServices = async (payload: any, res: Response) => {
-  const result = await pricePlanModel.find();
+  let userData = "";
+  let result = {};
+  if (payload?.user) {
+    userData = payload.user.id;
+    const userPlan = await userPlanModel
+      .findOne({ userId: userData })
+      .populate("planId")
+      .lean();
+
+    if (userPlan) {
+      result = await pricePlanModel.find().lean();
+      ((result as any) || [])?.forEach((plan: any) => {
+        if (plan._id.toString() === userPlan.planId._id.toString()) {
+          plan.isSubscribed = true;
+        } else {
+          plan.isSubscribed = false;
+        }
+      });
+    } else {
+      result = await pricePlanModel.find().lean();
+    }
+  } else {
+    result = await pricePlanModel.find().lean();
+  }
+
   return {
     success: true,
     message: "Retrieved successfully",

@@ -118,7 +118,7 @@ export const saveAnswers = async (req: Request, res: Response) => {
 
 export const getPricePlan = async (req: Request, res: Response): Promise<any> => {
   try {
-    const response = await getPlanServices(req.body, res);
+    const response = await getPlanServices(req, res);
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);

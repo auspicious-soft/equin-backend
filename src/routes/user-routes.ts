@@ -24,6 +24,7 @@ import {
   userHome,
   waterTracker,
 } from "src/controllers/user/user-controller";
+import { getPricePlan } from "src/controllers/auth/auth-controller";
 
 
 const router = Router();
@@ -34,6 +35,7 @@ router.get("/user-home", userHome);
 router.post("/fasting-today", fastingToday);
 router.post("/save-water-record", saveWaterRecord);
 router.post("/water-tracker", waterTracker);
+router.get("/get-price-plan-info", getPricePlan);
 
 // *********************MY PLAN ROUTES *************************/
 router.get("/get-users-plan", myPlan);
