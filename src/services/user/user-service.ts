@@ -27,7 +27,11 @@ import { uploadStreamToS3Service } from "src/utils/s3/s3";
 import { privacyPolicyModel } from "src/models/admin/privacy-policy-schema";
 import { contactSupportModel } from "src/models/admin/contact-support-schema";
 import { ratingModel } from "src/models/admin/app-rating-schema";
-import { getTodayUTC, getTomorrowUTC, getDateMidnightUTC } from "src/utils/date-utils";
+import {
+  getTodayUTC,
+  getTomorrowUTC,
+  getDateMidnightUTC,
+} from "src/utils/date-utils";
 
 configDotenv();
 
@@ -128,8 +132,12 @@ export const userHomeService = async (req: Request, res: Response) => {
   const currentDate = new Date();
   const currentDay = currentDate.getDay(); // 0 is Sunday, 1 is Monday, etc.
 
-  const startOfWeekUTC = getDateMidnightUTC(startOfWeek(currentDate, { weekStartsOn: 1 }));
-  const endOfWeekUTC = getDateMidnightUTC(endOfWeek(currentDate, { weekStartsOn: 1 }));
+  const startOfWeekUTC = getDateMidnightUTC(
+    startOfWeek(currentDate, { weekStartsOn: 1 })
+  );
+  const endOfWeekUTC = getDateMidnightUTC(
+    endOfWeek(currentDate, { weekStartsOn: 1 })
+  );
 
   const thisWeekRecords = await fastingRecordModel.find({
     userId: userData.id,
@@ -179,7 +187,10 @@ export const userHomeService = async (req: Request, res: Response) => {
       fastingMethod: fastingMethod?.fastingMethod || "16:8",
       thisWeekFastingDays,
       thisWeekFastingHours,
-      todaysFastingStatus: fastingRecords[0]?.date === today.toISOString().split("T")[0] ? true : false,
+      todaysFastingStatus:
+        fastingRecords[0]?.date === today.toISOString().split("T")[0]
+          ? true
+          : false,
       weekRange: {
         start: startOfWeekUTC.toISOString().split("T")[0],
         end: endOfWeekUTC.toISOString().split("T")[0],
@@ -402,8 +413,12 @@ export const myPlanService = async (req: Request, res: Response) => {
     .lean();
 
   // Log for debugging
-  console.log(`User ${userData.id} active plan check:`, 
-    activePlan ? `Found plan with ID ${activePlan.planId?._id || 'missing planId'}` : 'No active plan');
+  console.log(
+    `User ${userData.id} active plan check:`,
+    activePlan
+      ? `Found plan with ID ${activePlan.planId?._id || "missing planId"}`
+      : "No active plan"
+  );
 
   const essentialTips = await essentialTipModel
     .find({
@@ -415,9 +430,13 @@ export const myPlanService = async (req: Request, res: Response) => {
 
   if (activePlan && activePlan.planId) {
     // Check if user already has meal tracking records for the plan period
-    const startDate = getDateMidnightUTC(new Date(activePlan.startDate || currentDate));
-    const endDate = getDateMidnightUTC(new Date(activePlan.endDate || currentDate));
-    
+    const startDate = getDateMidnightUTC(
+      new Date(activePlan.startDate || currentDate)
+    );
+    const endDate = getDateMidnightUTC(
+      new Date(activePlan.endDate || currentDate)
+    );
+
     // First, check if we need to create or update meal tracking records
     const existingRecords = await trackUserMealModel.find({
       userId: userData.id,
@@ -426,14 +445,14 @@ export const myPlanService = async (req: Request, res: Response) => {
         $lte: endDate,
       },
     });
-    
+
     // Create a map of existing records by date for quick lookup
     const existingRecordsByDate: { [key: string]: any } = {};
-    existingRecords.forEach(record => {
-      const dateKey = record.planDay.toISOString().split('T')[0];
+    existingRecords.forEach((record) => {
+      const dateKey = record.planDay.toISOString().split("T")[0];
       existingRecordsByDate[dateKey] = record;
     });
-    
+
     // Get the meal plan based on user's gender
     const mealPlans = await mealPlanModel30.find({
       plan_type: userData.gender === "Male" ? "Men" : "Women",
@@ -456,22 +475,25 @@ export const myPlanService = async (req: Request, res: Response) => {
     for (let i = 0; i < totalDays; i++) {
       const currentDayDate = new Date(startDate);
       currentDayDate.setUTCDate(startDate.getUTCDate() + i);
-      const dateKey = currentDayDate.toISOString().split('T')[0];
-      
+      const dateKey = currentDayDate.toISOString().split("T")[0];
+
       // Get the corresponding meal plan (cycling through 30 days)
       const dayIndex = i % 30; // This will cycle from 0 to 29
       const mealPlan = mealPlans.find((plan) => plan.day === dayIndex + 1);
-      
+
       if (mealPlan) {
         if (existingRecordsByDate[dateKey]) {
           // Record exists - update it if planId is missing or different
           const existingRecord = existingRecordsByDate[dateKey];
-          if (!existingRecord.planId || existingRecord.planId.toString() !== mealPlan._id.toString()) {
+          if (
+            !existingRecord.planId ||
+            existingRecord.planId.toString() !== mealPlan._id.toString()
+          ) {
             bulkOperations.push({
               updateOne: {
                 filter: { _id: existingRecord._id },
-                update: { $set: { planId: mealPlan._id } }
-              }
+                update: { $set: { planId: mealPlan._id } },
+              },
             });
           }
         } else {
@@ -483,7 +505,7 @@ export const myPlanService = async (req: Request, res: Response) => {
             firstMealStatus: { carbs: 0, protein: 0, fat: 0, status: false },
             secondMealStatus: { carbs: 0, protein: 0, fat: 0, status: false },
             thirdMealStatus: { carbs: 0, protein: 0, fat: 0, status: false },
-            otherMealStatus: { carbs: 0, protein: 0, fat: 0, status: false }
+            otherMealStatus: { carbs: 0, protein: 0, fat: 0, status: false },
           });
         }
       }
@@ -493,11 +515,11 @@ export const myPlanService = async (req: Request, res: Response) => {
     if (bulkOperations.length > 0) {
       await trackUserMealModel.bulkWrite(bulkOperations);
     }
-    
+
     if (bulkEntries.length > 0) {
       await trackUserMealModel.insertMany(bulkEntries);
     }
-    
+
     // Get today's date at midnight for accurate comparison
     const today = getTodayUTC();
     const sixDaysAhead = new Date(today);
@@ -523,7 +545,10 @@ export const myPlanService = async (req: Request, res: Response) => {
 
   return {
     success: true,
-    message: activePlan && activePlan.planId ? "Active plan found" : "No active plan found",
+    message:
+      activePlan && activePlan.planId
+        ? "Active plan found"
+        : "No active plan found",
     data: {
       hasActivePlan: mealTracking ? true : false,
       plan: mealTracking || mealPlan,
@@ -612,116 +637,81 @@ export const nutritionServices = async (req: Request, res: Response) => {
     .populate("planId")
     .lean();
 
-  let todayMeal;
+  // Default meal status structure
+  const defaultMealStatus = {
+    carbs: 0,
+    protein: 0,
+    fat: 0,
+    status: false,
+  };
 
-  // First check if a meal record already exists for today
-  const existingMeal = await trackUserMealModel
-    .findOne({
-      userId: userData.id,
-      planDay: {
-        $gte: todayUTC,
-        $lt: tomorrowUTC,
+  // Prepare the meal data to upsert
+  const mealData = {
+    userId: userData.id,
+    planDay: todayUTC,
+    firstMealStatus: defaultMealStatus,
+    secondMealStatus: defaultMealStatus,
+    thirdMealStatus: defaultMealStatus,
+    otherMealStatus: defaultMealStatus,
+  };
+
+  // Add planId only if active plan exists
+  if (activePlan && activePlan.planId) {
+    (mealData as any).planId = activePlan.planId._id;
+  }
+
+  // Use findOneAndUpdate with upsert to prevent duplicates
+  // This is atomic and will either find existing or create new
+  const todayMeal = await trackUserMealModel
+    .findOneAndUpdate(
+      {
+        userId: userData.id,
+        planDay: {
+          $gte: todayUTC,
+          $lt: tomorrowUTC,
+        },
       },
-    })
+      {
+        $setOnInsert: mealData, // Only set these fields if creating new document
+        $set: {
+          // Always update planId if active plan exists
+          ...(activePlan &&
+            activePlan.planId && { planId: activePlan.planId._id }),
+        },
+      },
+      {
+        upsert: true, // Create if doesn't exist
+        new: true, // Return the updated/created document
+        runValidators: true,
+      }
+    )
     .populate("planId")
     .lean();
 
-  if (existingMeal) {
-    // Use existing meal record
-    todayMeal = existingMeal;
-  } else if (activePlan && activePlan.planId) {
-    // Create new meal record only if it doesn't exist and user has active plan
-    const defaultMealStatus = {
-      carbs: 0,
-      protein: 0,
-      fat: 0,
-      status: false,
-    };
+  // Initialize any missing meal status fields (defensive programming)
+  const mealStatusFields = [
+    "firstMealStatus",
+    "secondMealStatus",
+    "thirdMealStatus",
+    "otherMealStatus",
+  ];
 
-    const newMeal = await trackUserMealModel.create({
-      userId: userData.id,
-      planDay: todayUTC,
-      planId: activePlan.planId._id,
-      firstMealStatus: defaultMealStatus,
-      secondMealStatus: defaultMealStatus,
-      thirdMealStatus: defaultMealStatus,
-      otherMealStatus: defaultMealStatus,
-    });
-
-    todayMeal = newMeal.toObject();
-  } else {
-    // No active plan and no existing meal record
-    const defaultMealStatus = {
-      carbs: 0,
-      protein: 0,
-      fat: 0,
-      status: false,
-    };
-
-    const newMeal = await trackUserMealModel.create({
-      userId: userData.id,
-      planDay: todayUTC,
-      firstMealStatus: defaultMealStatus,
-      secondMealStatus: defaultMealStatus,
-      thirdMealStatus: defaultMealStatus,
-      otherMealStatus: defaultMealStatus,
-    });
-
-    todayMeal = newMeal.toObject();
-  }
-
-  // Initialize any missing meal status fields
-  if (!todayMeal.firstMealStatus) {
-    todayMeal.firstMealStatus = {
-      carbs: 0,
-      protein: 0,
-      fat: 0,
-      status: false,
-    };
-  }
-  if (!todayMeal.secondMealStatus) {
-    todayMeal.secondMealStatus = {
-      carbs: 0,
-      protein: 0,
-      fat: 0,
-      status: false,
-    };
-  }
-  if (!todayMeal.thirdMealStatus) {
-    todayMeal.thirdMealStatus = {
-      carbs: 0,
-      protein: 0,
-      fat: 0,
-      status: false,
-    };
-  }
-  if (!todayMeal.otherMealStatus) {
-    todayMeal.otherMealStatus = {
-      carbs: 0,
-      protein: 0,
-      fat: 0,
-      status: false,
-    };
-  }
+  mealStatusFields.forEach((field : any) => {
+    if (!(todayMeal as any)[field]) {
+      (todayMeal as any)[field] = defaultMealStatus;
+    }
+  });
 
   // Calculate calories for each meal
-  const firstMealCalories = todayMeal.firstMealStatus.status
-    ? todayMeal.firstMealStatus.carbs * 4 +
-      todayMeal.firstMealStatus.protein * 4 +
-      todayMeal.firstMealStatus.fat * 9
-    : 0;
+  const calculateMealCalories = (mealStatus: any) => {
+    return mealStatus.status
+      ? mealStatus.carbs * 4 + mealStatus.protein * 4 + mealStatus.fat * 9
+      : 0;
+  };
 
-  const secondMealCalories = todayMeal.secondMealStatus.status
-    ? todayMeal.secondMealStatus.carbs * 4 +
-      todayMeal.secondMealStatus.protein * 4 +
-      todayMeal.secondMealStatus.fat * 9
-    : 0;
-
-  const thirdMealCalories = todayMeal.thirdMealStatus.status
-    ? todayMeal.thirdMealStatus.carbs * 4 +
-      todayMeal.thirdMealStatus.protein * 4 +
-      todayMeal.thirdMealStatus.fat * 9
-    : 0;
+  const firstMealCalories = calculateMealCalories(todayMeal.firstMealStatus);
+  const secondMealCalories = calculateMealCalories(todayMeal.secondMealStatus);
+  const thirdMealCalories = calculateMealCalories(todayMeal.thirdMealStatus);
 
   // Add calories to each meal status
   todayMeal.firstMealStatus.calories = firstMealCalories;
@@ -729,28 +719,16 @@ export const nutritionServices = async (req: Request, res: Response) => {
   todayMeal.thirdMealStatus.calories = thirdMealCalories;
 
   // Calculate total consumed nutrients
-  const consumedCarbs =
-    (todayMeal.firstMealStatus.status ? todayMeal.firstMealStatus.carbs : 0) +
-    (todayMeal.secondMealStatus.status
-      ? todayMeal.secondMealStatus.carbs
-      : 0) +
-    (todayMeal.thirdMealStatus.status ? todayMeal.thirdMealStatus.carbs : 0);
+  const calculateConsumedNutrient = (nutrient: string) => {
+    return mealStatusFields.reduce((total, field) => {
+      const mealStatus = (todayMeal as any)[field];
+      return total + (mealStatus.status ? mealStatus[nutrient] : 0);
+    }, 0);
+  };
 
-  const consumedProtein =
-    (todayMeal.firstMealStatus.status
-      ? todayMeal.firstMealStatus.protein
-      : 0) +
-    (todayMeal.secondMealStatus.status
-      ? todayMeal.secondMealStatus.protein
-      : 0) +
-    (todayMeal.thirdMealStatus.status
-      ? todayMeal.thirdMealStatus.protein
-      : 0);
-
-  const consumedFat =
-    (todayMeal.firstMealStatus.status ? todayMeal.firstMealStatus.fat : 0) +
-    (todayMeal.secondMealStatus.status ? todayMeal.secondMealStatus.fat : 0) +
-    (todayMeal.thirdMealStatus.status ? todayMeal.thirdMealStatus.fat : 0);
+  const consumedCarbs = calculateConsumedNutrient("carbs");
+  const consumedProtein = calculateConsumedNutrient("protein");
+  const consumedFat = calculateConsumedNutrient("fat");
 
   // Calculate target nutrients (from meal plan if available)
   let targetCarbs = 0;
@@ -759,9 +737,6 @@ export const nutritionServices = async (req: Request, res: Response) => {
 
   // Extract target nutrients from meal plan if available
   if (todayMeal.planId && (todayMeal.planId as any).meals) {
-    const meals = (todayMeal.planId as any).meals;
-    // Estimate macros based on calories (rough estimation)
-    // Assuming 50% carbs, 30% protein, 20% fat distribution
     const totalCaloriesStr = (todayMeal.planId as any).total_calories || "0";
     const totalCalories = parseInt(totalCaloriesStr.replace(/\D/g, ""));
 
@@ -771,14 +746,13 @@ export const nutritionServices = async (req: Request, res: Response) => {
   }
 
   // Calculate percentages
-  const carbsPercentage =
-    targetCarbs > 0 ? Math.round((consumedCarbs / targetCarbs) * 100) : 0;
-  const proteinPercentage =
-    targetProtein > 0
-      ? Math.round((consumedProtein / targetProtein) * 100)
-      : 0;
-  const fatPercentage =
-    targetFat > 0 ? Math.round((consumedFat / targetFat) * 100) : 0;
+  const calculatePercentage = (consumed: number, target: number) => {
+    return target > 0 ? Math.round((consumed / target) * 100) : 0;
+  };
+
+  const carbsPercentage = calculatePercentage(consumedCarbs, targetCarbs);
+  const proteinPercentage = calculatePercentage(consumedProtein, targetProtein);
+  const fatPercentage = calculatePercentage(consumedFat, targetFat);
   const overallPercentage = Math.round(
     (carbsPercentage + proteinPercentage + fatPercentage) / 3
   );
@@ -813,7 +787,6 @@ export const nutritionServices = async (req: Request, res: Response) => {
     },
   };
 };
-
 export const updateMealTrackerService = async (req: Request, res: Response) => {
   const userData = req.user as any;
   const { mealId, finishedMeal, data } = req.body;
