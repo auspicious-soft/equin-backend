@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { httpStatusCode } from "../../lib/constant";
 import { errorParser } from "../../lib/errors/error-response-handler";
-import { changePasswordServices, chatHistoryServices, chatWithGPTServices, fastingTodayService, getMealDateWiseServices, getNutritionByImageServices, getPrivacyAndContactSupportServices, getRatingServices, getUserSettingsService, logoutUserServices, myPlanService, myProfileServices, nutritionServices, rateAppServices, savePricePlanServices, updateMealTrackerService, updateUserDetailsService, updateUserProfilePhotoService, userHomeService, waterDataService, waterTracketService } from "src/services/user/user-service";
+import { changePasswordServices, chatHistoryServices, chatWithGPTServices, fastingTodayService, getMealDateWiseServices, getNutritionByImageServices, getPrivacyAndContactSupportServices, getUserSettingsService, logoutUserServices, myPlanService, myProfileServices, nutritionServices, rateAppServices, savePricePlanServices, updateMealTrackerService, updateUserDetailsService, updateUserProfilePhotoService, userHomeService, waterDataService, waterTracketService } from "src/services/user/user-service";
 
 export const userHome = async (req: Request, res: Response) => {
   try {
@@ -236,7 +236,7 @@ export const rateApp = async (req: Request, res: Response) => {
 };
 export const getRating = async (req: Request, res: Response) => {
   try {
-    const response = await getRatingServices(req, res);
+    const response = await rateAppServices(req, res);
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);

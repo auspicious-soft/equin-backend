@@ -354,23 +354,28 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
               break;
             }
 
-            // Calculate end date based on price recurring info
-            const endDate = new Date();
-            if (price.recurring) {
-              const { interval, interval_count } = price.recurring;
-              if (interval === "day")
-                endDate.setDate(endDate.getDate() + (interval_count || 1));
-              else if (interval === "week")
-                endDate.setDate(endDate.getDate() + (interval_count || 1) * 7);
-              else if (interval === "month")
-                endDate.setMonth(endDate.getMonth() + (interval_count || 1));
-              else if (interval === "year")
-                endDate.setFullYear(
-                  endDate.getFullYear() + (interval_count || 1)
-                );
+            // Calculate end date based on interval using UTC dates
+            const startDate = getTodayUTC();
+            const endDate = new Date(startDate);
+            
+            if (price.recurring?.interval === "month") {
+              endDate.setUTCMonth(
+                endDate.getUTCMonth() + (price.recurring.interval_count || 1)
+              );
+            } else if (price.recurring?.interval === "year") {
+              endDate.setUTCFullYear(
+                endDate.getUTCFullYear() + (price.recurring.interval_count || 1)
+              );
             } else {
-              // Default to 30 days for one-time payments
-              endDate.setDate(endDate.getDate() + 30);
+              // Default to 1 month if interval is not specified
+              endDate.setUTCMonth(endDate.getUTCMonth() + 1);
+            }
+
+            // Get planId from productId
+            const planId = await getPlanIdFromProductId(productId);
+            if (!planId) {
+              console.error(`No planId found for productId ${productId}`);
+              break;
             }
 
             // Create new user plan
@@ -378,13 +383,14 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
               userId,
               stripeProductId: productId,
               stripePriceId: price.id,
+              planId: planId, // Ensure planId is set
               planName: product.name,
               price: price.unit_amount,
               currency: price.currency,
               interval: price.recurring?.interval,
               intervalCount: price.recurring?.interval_count,
               paymentStatus: "success",
-              startDate: new Date(),
+              startDate: startDate,
               endDate,
               transactionId: paymentIntent.id,
               paymentMethod: paymentIntent.payment_method_types?.[0] || "card",
@@ -527,4 +533,10 @@ const getPlanIdFromProductId = async (productId: string) => {
     }));
   }
   return pricePlan._id;
+};
+
+// Helper function to get today's date in UTC
+const getTodayUTC = () => {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 };

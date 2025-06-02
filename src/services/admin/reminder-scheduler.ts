@@ -4,13 +4,21 @@ import { healthDataModel } from "../../models/user/health-data-schema";
 import { waterTrackerModel } from "../../models/user/water-tracker-schema";
 import { createNotification } from "./notification-service";
 
+const getTodayUTC = () => {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+};
+
+const getTomorrowUTC = () => {
+  const today = getTodayUTC();
+  return new Date(today.getTime() + 24 * 60 * 60 * 1000);
+};
+
 export const checkAndSendWaterReminders = async () => {
   try {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const endOfToday = new Date();
-    endOfToday.setHours(23, 59, 59, 999);
+    const startOfToday = getTodayUTC();
+    const endOfToday = getTomorrowUTC();
+    endOfToday.setUTCMilliseconds(endOfToday.getUTCMilliseconds() - 1);
 
     const usersWithReminders = await healthDataModel.find({
       waterReminder: true,
@@ -57,12 +65,13 @@ export const checkAndSendWaterReminders = async () => {
 export const checkAndSendMealReminders = async () => {
   try {
     const now = new Date();
-    const currentHour = now.getHours();
+    // Convert to UTC hour to ensure consistent behavior across timezones
+    const currentHour = now.getUTCHours();
 
-    // Define meal times
+    // Define meal times in UTC
     const mealTimes = {
       firstMeal: {
-        start: 11,
+        start: 11, // These should be UTC hours
         end: 13,
         type: "FIRST_MEAL_REMINDER",
         displayName: "breakfast",
@@ -159,17 +168,18 @@ export const checkAndSendMealReminders = async () => {
 
 // Initialize cron jobs
 export const initializeReminderCrons = () => {
-  // Water reminders every 2 hours between 8 AM and 10 PM
-  new CronJob("0 8-22/2 * * *", checkAndSendWaterReminders, null, true);
+  // Water reminders every 2 hours between 8 AM and 10 PM UTC
+  new CronJob("0 8-22/2 * * *", checkAndSendWaterReminders, null, true, 'UTC');
 
-  // First meal reminder at 11:30 AM (30 minutes before scheduled time)
-  new CronJob("0 30 11 * * *", checkAndSendMealReminders, null, true);
+  // First meal reminder at 11:30 AM UTC
+  new CronJob("0 30 11 * * *", checkAndSendMealReminders, null, true, 'UTC');
 
-  // Second meal (snack) reminder at 2:30 PM
-  new CronJob("0 30 14 * * *", checkAndSendMealReminders, null, true);
+  // Second meal (snack) reminder at 2:30 PM UTC
+  new CronJob("0 30 14 * * *", checkAndSendMealReminders, null, true, 'UTC');
 
-  // Third meal reminder at 6:30 PM
-  new CronJob("0 30 18 * * *", checkAndSendMealReminders, null, true);
+  // Third meal reminder at 6:30 PM UTC
+  new CronJob("0 30 18 * * *", checkAndSendMealReminders, null, true, 'UTC');
 };
+
 
 
