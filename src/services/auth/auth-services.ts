@@ -32,6 +32,7 @@ import { healthDataModel } from "src/models/user/health-data-schema";
 import { createSecurityNotification } from "src/services/admin/notification-service";
 import { privacyPolicyModel } from "src/models/admin/privacy-policy-schema";
 import { contactSupportModel } from "src/models/admin/contact-support-schema";
+import { termConditionModel } from "src/models/admin/term-condition-model";
 configDotenv();
 
 const sanitizeUser = (user: any): UserDocument => {
@@ -108,6 +109,24 @@ export const createContactSupportServices = async (
   //     upsert: true,
   //   }
   // );
+
+  return {
+    success: true,
+    message: "Created Successfully",
+  };
+};
+export const createTermConditionServices = async (
+  payload: any,
+  res: Response
+) => {
+  const response = await termConditionModel.findOneAndUpdate(
+    { isActive: true },
+    payload,
+    {
+      new: true,
+      upsert: true,
+    }
+  );
 
   return {
     success: true,

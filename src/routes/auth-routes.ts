@@ -7,6 +7,7 @@ import {
   createPricePlan,
   createPrivacyPolicy,
   createQuestions,
+  createTermCondition,
   forgotPassword,
   getPricePlan,
   getQuestions,
@@ -32,6 +33,7 @@ router.post("/create-30days-plan", createMealPlan);
 router.post("/send-push-notifications", sendPushNotificationToUser)
 router.post("/create-privacy-policy", createPrivacyPolicy)
 router.post("/create-contact-support", createContactSupport)
+router.post("/create-term-condition", createTermCondition)
 
 
 

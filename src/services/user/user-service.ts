@@ -33,6 +33,8 @@ import {
   getDateMidnightUTC,
   debugDateComparison,
 } from "src/utils/date-utils";
+import { termConditionModel } from "src/models/admin/term-condition-model";
+
 
 configDotenv();
 
@@ -1816,6 +1818,15 @@ export const getPrivacyAndContactSupportServices = async (
       success: true,
       message: "Data retrieved successfully",
       data: contactSupport,
+    };
+  }
+
+  if(type === "termsCondition"){
+    const termsCondition = await termConditionModel.findOne({ isActive: true });
+    return {
+      success: true,
+      message: "Data retrieved successfully",
+      data: termsCondition,
     };
   }
 };
