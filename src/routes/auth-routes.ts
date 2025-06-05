@@ -13,6 +13,7 @@ import {
   getQuestions,
   resendOtp,
   saveAnswers,
+  socialSignUp,
   updateForgottenPassword,
   userSignIn,
   userSignUp,
@@ -40,6 +41,7 @@ router.get("/get-questions/:deviceId", getQuestions);
 router.post("/save-answers", saveAnswers);
 
 router.post("/user-signup", userSignUp);
+router.post("/user-social-signup", socialSignUp);
 router.post("/verify-otp", verifyOTP);
 router.post("/resend-otp", resendOtp);
 
@@ -55,8 +57,8 @@ router.get("/test-api", async (req, res) => {
     userId: req.body.userId,
     title: "Test Notification",
     message: "This is a test notification",
-    type: "TEST",
-    subType: "TEST_SUBTYPE",
+    type: "WATER_REMINDER",
+    subType: "WATER_GOAL_REMINDER",
     priority: "HIGH",
   })
   res.status(200).json({ message: "Test route is working!" });

@@ -33,6 +33,7 @@ import { createSecurityNotification } from "src/services/admin/notification-serv
 import { privacyPolicyModel } from "src/models/admin/privacy-policy-schema";
 import { contactSupportModel } from "src/models/admin/contact-support-schema";
 import { termConditionModel } from "src/models/admin/term-condition-model";
+import jwt from "jsonwebtoken";
 configDotenv();
 
 const sanitizeUser = (user: any): UserDocument => {
@@ -311,6 +312,90 @@ export const userSignUpServices = async (payload: any, res: Response) => {
     success: true,
     message: "OTP Sent Successfully",
   };
+};
+export const socialSignUpService = async (payload: any, res: Response) => {
+  const { idToken, authType, deviceId, fcmToken } = payload;
+  if (!authType || !idToken || !deviceId || !fcmToken) {
+    return errorResponseHandler(
+      "Auth type, idToken, and deviceId are required",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  const decodIdToken = jwt.decode(idToken);
+  if (!decodIdToken || typeof decodIdToken !== "object") {
+    return errorResponseHandler(
+      "Invalid idToken",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  const { email, name , picture } = decodIdToken as any;
+
+  const checkExist = await usersModel.findOne({
+    email,
+  });
+
+  if (checkExist) {
+    if (checkExist.authType !== authType) {
+      return errorResponseHandler(
+        `Please try login with ${checkExist.authType}`,
+        httpStatusCode.BAD_REQUEST,
+        res
+      );
+    }
+    checkExist.token = await generateUserToken(checkExist as any);
+    if (
+      checkExist?.fcmToken?.length &&
+      !checkExist?.fcmToken.includes(fcmToken)
+    ) {
+      checkExist.fcmToken.push(fcmToken);
+    }
+    await checkExist.save();
+
+    return {
+      success: true,
+      message: "Logged in successfully",
+      data: sanitizeUser(checkExist),
+    } as any;
+  } else {
+    const newUser = new usersModel({
+      email,
+      fullName: name || "",
+      profilePic: picture || "",
+      emailVerified: true,
+      authType,
+      deviceId,
+      fcmToken: [fcmToken],
+    });
+
+    newUser.token = await generateUserToken(newUser as any);
+    
+    await questionResponseModel.updateMany(
+      { deviceId: newUser?.deviceId, userId: null },
+      { $set: { userId: newUser?._id, deviceId: null } },
+      { multi: true }
+    );
+
+    await healthDataModel.updateOne(
+      { deviceId: newUser?.deviceId, userId: null },
+      { $set: { userId: newUser?._id, deviceId: null } }
+    );
+
+    await userPlanModel.updateOne(
+      { deviceId: newUser?.deviceId, userId: null },
+      { $set: { userId: newUser?._id, deviceId: null } }
+    );
+    await newUser.save();
+
+    return {
+      success: true,
+      message: "Logged in successfully",
+      data: sanitizeUser(newUser),
+    } as any;
+  }
 };
 
 export const verifyOTPServices = async (payload: any, res: Response) => {
