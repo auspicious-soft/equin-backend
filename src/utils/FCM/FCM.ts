@@ -57,19 +57,4 @@ export const sendNotification = async (
       throw error;
     }
   }
-  // const message: NotificationMessage = {
-  //     notification: {
-  //         title,
-  //         body,
-  //     },
-  //     token: fcmToken,
-  // };
-
-  // try {
-  //     const response = await admin.messaging().send(message);
-  //     console.log('✅ Notification sent:', response);
-  // } catch (error) {
-  //     console.error('❌ Failed to send notification:', error);
-  //     throw error;
-  // }
 };

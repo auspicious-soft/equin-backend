@@ -6,7 +6,9 @@ import { createNotification } from "./notification-service";
 
 const getTodayUTC = () => {
   const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
 };
 
 const getTomorrowUTC = () => {
@@ -113,27 +115,27 @@ export const checkAndSendMealReminders = async () => {
       {
         $match: {
           mealReminder: true,
-          deviceId: { $exists: true, $ne: null }
-        }
+          deviceId: { $exists: true, $ne: null },
+        },
       },
       {
         $lookup: {
           from: "userplans", // Collection name is typically lowercase
           localField: "userId",
           foreignField: "userId",
-          as: "subscription"
-        }
+          as: "subscription",
+        },
       },
       {
         $match: {
-          "subscription": { 
-            $elemMatch: { 
+          subscription: {
+            $elemMatch: {
               endDate: { $gt: new Date() },
-              paymentStatus: { $nin: ["pending", "expired", "failed"] }
-            }
-          }
-        }
-      }
+              paymentStatus: { $nin: ["pending", "expired", "failed"] },
+            },
+          },
+        },
+      },
     ]);
 
     for (const user of usersToRemind) {
@@ -169,17 +171,14 @@ export const checkAndSendMealReminders = async () => {
 // Initialize cron jobs
 export const initializeReminderCrons = () => {
   // Water reminders every 2 hours between 8 AM and 10 PM UTC
-  new CronJob("0 8-22/2 * * *", checkAndSendWaterReminders, null, true, 'UTC');
+  new CronJob("0 8-22/2 * * *", checkAndSendWaterReminders, null, true, "UTC");
 
   // First meal reminder at 11:30 AM UTC
-  new CronJob("0 30 11 * * *", checkAndSendMealReminders, null, true, 'UTC');
+  new CronJob("0 30 11 * * *", checkAndSendMealReminders, null, true, "UTC");
 
   // Second meal (snack) reminder at 2:30 PM UTC
-  new CronJob("0 30 14 * * *", checkAndSendMealReminders, null, true, 'UTC');
+  new CronJob("0 30 14 * * *", checkAndSendMealReminders, null, true, "UTC");
 
   // Third meal reminder at 6:30 PM UTC
-  new CronJob("0 30 18 * * *", checkAndSendMealReminders, null, true, 'UTC');
+  new CronJob("0 30 18 * * *", checkAndSendMealReminders, null, true, "UTC");
 };
-
-
-

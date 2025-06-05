@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { notificationModel } from "../../models/notifications/notification-schema";
 import { sendNotification } from "../../utils/FCM/FCM";
+import { usersModel } from "src/models/user/user-schema";
 
 interface CreateNotificationProps {
   userId: mongoose.Types.ObjectId;
@@ -42,9 +43,16 @@ export const createNotification = async ({
       status: "PENDING",
     });
 
-    if (deviceId) {
+    if (userId) {
       try {
-        // await sendNotification(deviceId, title, message);
+        const fcmTokens = await usersModel.findById(userId, {
+          fcmToken: 1,
+        }).lean();
+        if (!fcmTokens || !fcmTokens.fcmToken || fcmTokens.fcmToken.length === 0) {
+          console.warn("No FCM tokens found for user:", userId);
+          return notification;
+        }
+        await sendNotification(fcmTokens.fcmToken, title, message);
         await notificationModel.findByIdAndUpdate(notification._id, {
           status: "SENT",
         });
