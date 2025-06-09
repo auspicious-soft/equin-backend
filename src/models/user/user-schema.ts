@@ -45,7 +45,6 @@ const usersSchema = new mongoose.Schema<UserDocument>(
     },
     password: {
       type: String,
-      required: true,
     },
     countryCode: {
       type: String,

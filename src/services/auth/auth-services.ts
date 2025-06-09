@@ -332,7 +332,7 @@ export const socialSignUpService = async (payload: any, res: Response) => {
     );
   }
 
-  const { email, name , picture } = decodIdToken as any;
+  const { email, name, picture } = decodIdToken as any;
 
   const checkExist = await usersModel.findOne({
     email,
@@ -355,6 +355,8 @@ export const socialSignUpService = async (payload: any, res: Response) => {
     }
     await checkExist.save();
 
+    console.log("New user created: ", checkExist);
+
     return {
       success: true,
       message: "Logged in successfully",
@@ -372,7 +374,7 @@ export const socialSignUpService = async (payload: any, res: Response) => {
     });
 
     newUser.token = await generateUserToken(newUser as any);
-    
+
     await questionResponseModel.updateMany(
       { deviceId: newUser?.deviceId, userId: null },
       { $set: { userId: newUser?._id, deviceId: null } },
@@ -390,10 +392,12 @@ export const socialSignUpService = async (payload: any, res: Response) => {
     );
     await newUser.save();
 
+    console.log("New user created xxxxx: ", newUser);
+
     return {
       success: true,
       message: "Logged in successfully",
-      data: sanitizeUser(newUser),
+      data: newUser,
     } as any;
   }
 };
