@@ -35,7 +35,6 @@ import {
 } from "src/utils/date-utils";
 import { termConditionModel } from "src/models/admin/term-condition-model";
 
-
 configDotenv();
 
 export interface UserPayload {
@@ -417,7 +416,6 @@ export const myPlanService = async (req: Request, res: Response) => {
       .populate("planId")
       .lean();
 
-
     const essentialTips = await essentialTipModel
       .find({
         isActive: true,
@@ -427,8 +425,12 @@ export const myPlanService = async (req: Request, res: Response) => {
       .limit(5);
 
     if (activePlan?.planId) {
-      const startDate = getDateMidnightUTC(new Date(activePlan?.startDate ?? today));
-      const endDate = getDateMidnightUTC(new Date(activePlan?.endDate ?? today));
+      const startDate = getDateMidnightUTC(
+        new Date(activePlan?.startDate ?? today)
+      );
+      const endDate = getDateMidnightUTC(
+        new Date(activePlan?.endDate ?? today)
+      );
 
       const existingRecords = await trackUserMealModel.find({
         userId: userData.id,
@@ -452,9 +454,10 @@ export const myPlanService = async (req: Request, res: Response) => {
         console.error(`No meal plans found for gender: ${userData.gender}`);
       }
 
-      const totalDays = Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
-      ) + 1;
+      const totalDays =
+        Math.ceil(
+          (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
+        ) + 1;
 
       const bulkOperations = [];
       const bulkEntries = [];
@@ -1034,7 +1037,8 @@ export const getUserSettingsService = async (req: Request, res: Response) => {
     message: "User details retrieved successfully",
     data: {
       editProfile: { ...user, ...otherDetails?.otherDetails },
-      notification: false,
+      mealReminder: otherDetails?.mealReminder,
+      notification: otherDetails?.notification,
       membership: membership ? membership : {},
       language: otherDetails?.Language,
     },
@@ -1048,6 +1052,21 @@ export const updateUserDetailsService = async (req: Request, res: Response) => {
   await healthDataModel.findOneAndUpdate(
     { userId: userData.id },
     { otherDetails: { gender, dob, age, height, weight, bmi } },
+    { upsert: true, new: true }
+  );
+
+  return {
+    success: true,
+    message: "Data updated successfully",
+  };
+};
+export const updateSettingsService = async (req: Request, res: Response) => {
+  const userData = req.user as any;
+  const { mealReminder } = req.body;
+
+  await healthDataModel.findOneAndUpdate(
+    { userId: userData.id },
+    { mealReminder },
     { upsert: true, new: true }
   );
 
@@ -1821,7 +1840,7 @@ export const getPrivacyAndContactSupportServices = async (
     };
   }
 
-  if(type === "termsCondition"){
+  if (type === "termsCondition") {
     const termsCondition = await termConditionModel.findOne({ isActive: true });
     return {
       success: true,

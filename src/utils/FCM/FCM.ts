@@ -49,12 +49,17 @@ export const sendNotification = async (
       token: token,
     };
 
+    if (!token || token === null || token.trim() === "") {
+      console.warn("❗ No FCM token provided, skipping notification");
+      continue;
+    }
+
     try {
       const response = await admin.messaging().send(message);
       console.log("✅ Notification sent:", response);
     } catch (error) {
       console.error("❌ Failed to send notification:", error);
-      throw error;
+      // throw error;
     }
   }
 };

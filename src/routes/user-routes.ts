@@ -19,6 +19,7 @@ import {
   savePricePlan,
   saveWaterRecord,
   updateMealTracker,
+  updateSettings,
   updateUserDetails,
   updateUserProfilePhoto,
   userHome,
@@ -50,6 +51,7 @@ router.post("/record-meal", updateMealTracker);
 
 router.get("/get-settings", getUserSettings);
 router.put("/update-user-profile", updateUserDetails);
+router.put("/update-settings", updateSettings);
 router.post("/update-profile-pic", updateUserProfilePhoto);
 router.get("/my-profile", myProfile);
 router.get("/get-meal-by-date", getMealDateWise);

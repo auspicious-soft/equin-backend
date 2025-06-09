@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { httpStatusCode } from "../../lib/constant";
 import { errorParser } from "../../lib/errors/error-response-handler";
-import { changePasswordServices, chatHistoryServices, chatWithGPTServices, fastingTodayService, getMealDateWiseServices, getNutritionByImageServices, getPrivacyAndContactSupportServices, getRatingServices, getUserSettingsService, logoutUserServices, myPlanService, myProfileServices, nutritionServices, rateAppServices, savePricePlanServices, updateMealTrackerService, updateUserDetailsService, updateUserProfilePhotoService, userHomeService, waterDataService, waterTracketService } from "src/services/user/user-service";
+import { changePasswordServices, chatHistoryServices, chatWithGPTServices, fastingTodayService, getMealDateWiseServices, getNutritionByImageServices, getPrivacyAndContactSupportServices, getRatingServices, getUserSettingsService, logoutUserServices, myPlanService, myProfileServices, nutritionServices, rateAppServices, savePricePlanServices, updateMealTrackerService, updateSettingsService, updateUserDetailsService, updateUserProfilePhotoService, userHomeService, waterDataService, waterTracketService } from "src/services/user/user-service";
 
 export const userHome = async (req: Request, res: Response) => {
   try {
@@ -115,6 +115,17 @@ export const getUserSettings = async (req: Request, res: Response) => {
 export const updateUserDetails = async (req: Request, res: Response) => {
   try {
     const response = await updateUserDetailsService(req, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const updateSettings = async (req: Request, res: Response) => {
+  try {
+    const response = await updateSettingsService(req, res);
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);

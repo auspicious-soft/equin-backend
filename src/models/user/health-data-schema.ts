@@ -66,7 +66,7 @@ const healthDataSchema = new mongoose.Schema(
     },
     notification: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     fastingMethod:{
       type: String,
