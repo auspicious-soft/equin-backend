@@ -154,14 +154,14 @@ export const initializeReminderCrons = () => {
   };
   
   // For testing **************************************************
-  new CronJob(
-    "*/60 * * * * *",
-    () => checkAndSendMealReminders(first),
-    null,
-    true,
-    "UTC"
-  );
-  new CronJob("*/60 * * * * *", checkAndSendWaterReminders, null, true, "UTC");
+  // new CronJob(
+  //   "*/60 * * * * *",
+  //   () => checkAndSendMealReminders(first),
+  //   null,
+  //   true,
+  //   "UTC"
+  // );
+  // new CronJob("*/60 * * * * *", checkAndSendWaterReminders, null, true, "UTC");
   // For testing **************************************************
 
   // First meal reminder at 11:30 AM UTC
