@@ -6,11 +6,20 @@ export interface UserPlanDocument extends Document {
   planId: mongoose.Types.ObjectId;
   stripeProductId: string;
   autoPayment: boolean;
-  paymentStatus: "pending" | "success" | "failed" | "cancelled" | "expired" | "initiated";
+  paymentStatus:
+    | "pending"
+    | "success"
+    | "failed"
+    | "cancelled"
+    | "expired"
+    | "initiated";
   startDate: Date | null;
   endDate: Date | null;
   transactionId?: string | null;
   paymentMethod?: string | null;
+  currency: any;
+  interval: any;
+  intervalCount: any;
 }
 
 const userPlanSchema = new mongoose.Schema(
@@ -37,7 +46,14 @@ const userPlanSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "success", "failed", "cancelled" , "expired" , "initiated"],
+      enum: [
+        "pending",
+        "success",
+        "failed",
+        "cancelled",
+        "expired",
+        "initiated",
+      ],
       default: "pending",
       required: true,
     },
@@ -53,10 +69,13 @@ const userPlanSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    paymentMethod: {
-      type: String, // e.g., "card", "upi", "paypal"
-      default: null,
+    currency :{
+      type: String,
+      default: null
     },
+    interval :{},
+    intervalCount :{},
+    paymentMethod: {},
   },
   { timestamps: true }
 );

@@ -20,6 +20,7 @@ import {
   verifyForgotPassOTP,
   verifyOTP,
 } from "src/controllers/auth/auth-controller";
+import { trackUserMealModel } from "src/models/user/track-user-meal";
 import { createNotification } from "src/services/admin/notification-service";
 
 const router = Router();
@@ -52,16 +53,8 @@ router.post("/user-signIn", userSignIn);
 
 //test route
 router.get("/test-api", async (req, res) => {
-  console.log("Test route hit", req.body.userId);
-  createNotification({
-    userId: req.body.userId,
-    title: "Test Notification",
-    message: "This is a test notification",
-    type: "WATER_REMINDER",
-    subType: "WATER_GOAL_REMINDER",
-    priority: "HIGH",
-  })
-  res.status(200).json({ message: "Test route is working!" });
+  const data = await trackUserMealModel.find().sort({planDay: 1}).select("planDay")
+  res.status(200).json({ message: "Test route is working!", data });
 });
 
 export { router };

@@ -5,7 +5,8 @@ import stripe from "src/config/stripe";
 import { pricePlanModel } from "src/models/admin/price-plan-schema";
 import { userPlanModel } from "src/models/user-plan/user-plan-schema";
 import { Client } from "twilio/lib/base/BaseTwilio";
-
+import { Stripe } from "stripe";
+import mongoose from "mongoose";
 
 //********************Test Controllers*******************/
 export const stripeSuccess = async (req: Request, res: Response) => {
@@ -271,15 +272,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
     const sig = req.headers["stripe-signature"] as string;
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-    // Log incoming webhook data for debugging
-    console.log("Webhook received:", {
-      headers: req.headers,
-      body:
-        typeof req.body === "string"
-          ? "(raw body)"
-          : JSON.stringify(req.body).substring(0, 100) + "...",
-    });
-
+    // Validate signature and secret
     if (!sig || !endpointSecret) {
       console.error("Missing signature or endpoint secret");
       return res.status(httpStatusCode.BAD_REQUEST).json({
@@ -288,12 +281,11 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       });
     }
 
-    let event;
-
+    // Construct webhook event
+    let event: Stripe.Event;
     try {
-      // For webhooks, req.body should be raw, not parsed JSON
       event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-      console.log("Webhook event constructed:", event.type);
+      console.log(`Webhook event constructed: ${event.type}`);
     } catch (err: any) {
       console.error("Webhook signature verification failed:", err.message);
       return res.status(httpStatusCode.BAD_REQUEST).json({
@@ -302,157 +294,137 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       });
     }
 
-    // Log the event type and data for debugging
-    console.log(`Processing webhook event: ${event.type}`);
-    console.log(
-      "Event data:",
-      JSON.stringify(event.data.object).substring(0, 200) + "..."
-    );
+    // Handle payment_intent.succeeded event
+    if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      console.log(`Payment intent succeeded: ${paymentIntent.id}`);
 
-    // Handle different event types
-    switch (event.type) {
-      case "payment_intent.succeeded": {
-        const paymentIntent = event.data.object as any;
-        console.log("Payment intent succeeded:", paymentIntent.id);
-        console.log("Metadata:", paymentIntent.metadata);
-
-        // Make sure we have the required metadata
-        if (
-          !paymentIntent.metadata ||
-          !paymentIntent.metadata.userId ||
-          !paymentIntent.metadata.productId
-        ) {
-          console.error("Missing required metadata in payment intent");
-          break;
-        }
-
-        const { userId, productId, priceId } = paymentIntent.metadata;
-
-        // Find the pending user plan
-        const existingPlan = await userPlanModel.findOne({
-          userId,
-          stripeProductId: productId,
-          paymentStatus: "pending",
+      const { userId, productId, priceId } = paymentIntent.metadata || {};
+      if (!userId || !productId) {
+        console.error("Missing userId or productId in payment intent metadata");
+        return res.status(httpStatusCode.BAD_REQUEST).json({
+          success: false,
+          message: "Missing required metadata",
         });
+      }
 
-        if (!existingPlan) {
-          console.log(
-            `No pending plan found for user ${userId} and product ${productId}`
+      // Start a MongoDB session for transaction
+      const session = await mongoose.startSession();
+      try {
+        await session.withTransaction(async () => {
+          // Check if payment intent has already been processed
+          const existingProcessedPlan = await userPlanModel
+            .findOne({
+              transactionId: paymentIntent.id,
+              paymentStatus: "success",
+            })
+            .session(session);
+
+          if (existingProcessedPlan) {
+            console.log(`Payment intent ${paymentIntent.id} already processed for user ${userId}`);
+            return;
+          }
+
+          // Find pending plan
+          let existingPlan = await userPlanModel
+            .findOne({
+              userId,
+              stripeProductId: productId,
+              paymentStatus: "pending",
+            })
+            .session(session);
+
+          // Fetch product and price details
+          const product = await stripe.products.retrieve(productId);
+          const price = priceId
+            ? await stripe.prices.retrieve(priceId)
+            : product.default_price
+            ? await stripe.prices.retrieve(product.default_price as string)
+            : null;
+
+          if (!price) {
+            console.error(`No price found for product ${productId}`);
+            throw new Error("Price not found");
+          }
+
+          // Calculate dates in UTC
+          const startDate = getTodayUTC();
+          const endDate = addUTCInterval(
+            startDate,
+            price.recurring?.interval || "day",
+            price.recurring?.interval_count || 30
           );
 
-          // Create a new plan if none exists
-          try {
-            // Get product details if we have a product ID
-            const product = await stripe.products.retrieve(productId);
-            const price = priceId
-              ? await stripe.prices.retrieve(priceId)
-              : product.default_price
-              ? await stripe.prices.retrieve(product.default_price as string)
-              : null;
-
-            if (!price) {
-              console.error("No price found for product", productId);
-              break;
-            }
-
-            // Calculate end date based on interval using UTC dates
-            const startDate = getTodayUTC();
-            const endDate = new Date(startDate);
-            
-            if (price.recurring?.interval === "month") {
-              endDate.setUTCMonth(
-                endDate.getUTCMonth() + (price.recurring.interval_count || 1)
+          if (existingPlan) {
+            // Update existing plan
+            await userPlanModel
+              .findByIdAndUpdate(
+                existingPlan._id,
+                {
+                  $set: {
+                    paymentStatus: "success",
+                    transactionId: paymentIntent.id,
+                    paymentMethod: paymentIntent.payment_method_types?.[0] || "card",
+                    startDate,
+                    endDate,
+                    currency: price.currency,
+                    interval: price.recurring?.interval,
+                    intervalCount: price.recurring?.interval_count,
+                  },
+                },
+                { session }
               );
-            } else if (price.recurring?.interval === "year") {
-              endDate.setUTCFullYear(
-                endDate.getUTCFullYear() + (price.recurring.interval_count || 1)
-              );
-            } else {
-              // Default to 1 month if interval is not specified
-              endDate.setUTCMonth(endDate.getUTCMonth() + 1);
-            }
 
-            // Get planId from productId
+            console.log(`Updated plan for user ${userId} and product ${productId}`);
+          } else {
+            // Create new plan
             const planId = await getPlanIdFromProductId(productId);
             if (!planId) {
               console.error(`No planId found for productId ${productId}`);
-              break;
+              throw new Error("Plan ID not found");
             }
 
-            // Create new user plan
-            await userPlanModel.create({
-              userId,
-              stripeProductId: productId,
-              stripePriceId: price.id,
-              planId: planId, // Ensure planId is set
-              planName: product.name,
-              price: price.unit_amount,
-              currency: price.currency,
-              interval: price.recurring?.interval,
-              intervalCount: price.recurring?.interval_count,
-              paymentStatus: "success",
-              startDate: startDate,
-              endDate,
-              transactionId: paymentIntent.id,
-              paymentMethod: paymentIntent.payment_method_types?.[0] || "card",
-            });
+            // Ensure no other active plan exists for the user
+            const activePlan = await userPlanModel
+              .findOne({
+                userId,
+                paymentStatus: "success",
+                endDate: { $gte: startDate },
+              })
+              .session(session);
 
-            console.log(
-              `Created new plan for user ${userId} and product ${productId}`
+            if (activePlan) {
+              console.warn(`Active plan already exists for user ${userId}, skipping plan creation`);
+              return;
+            }
+
+            await userPlanModel.create(
+              [
+                {
+                  userId,
+                  planId,
+                  stripeProductId: productId,
+                  paymentStatus: "success",
+                  transactionId: paymentIntent.id,
+                  paymentMethod: paymentIntent.payment_method_types?.[0] || "card",
+                  startDate,
+                  endDate,
+                  currency: price.currency,
+                  interval: price.recurring?.interval,
+                  intervalCount: price.recurring?.interval_count,
+                },
+              ],
+              { session }
             );
-          } catch (err) {
-            console.error("Error creating new plan:", err);
+
+            console.log(`Created new plan for user ${userId} and product ${productId}`);
           }
-          break;
-        }
-
-        // Get product and price details to calculate end date
-        const product = await stripe.products.retrieve(productId);
-        const price = priceId
-          ? await stripe.prices.retrieve(priceId)
-          : product.default_price
-          ? await stripe.prices.retrieve(product.default_price as string)
-          : null;
-
-        // Calculate end date based on price recurring info
-        const startDate = new Date();
-        const endDate = new Date();
-        if (price && price.recurring) {
-          const { interval, interval_count } = price.recurring;
-          if (interval === "day")
-            endDate.setDate(endDate.getDate() + (interval_count || 1));
-          else if (interval === "week")
-            endDate.setDate(endDate.getDate() + (interval_count || 1) * 7);
-          else if (interval === "month")
-            endDate.setMonth(endDate.getMonth() + (interval_count || 1));
-          else if (interval === "year")
-            endDate.setFullYear(endDate.getFullYear() + (interval_count || 1));
-        } else {
-          // Default to 30 days for one-time payments
-          endDate.setDate(endDate.getDate() + 30);
-        }
-
-        // Update the existing plan with end date and payment details
-        await userPlanModel.findByIdAndUpdate(existingPlan._id, {
-          $set: {
-            paymentStatus: "success",
-            transactionId: paymentIntent.id,
-            paymentMethod: paymentIntent.payment_method_types?.[0] || "card",
-            startDate: startDate,
-            endDate: endDate,
-          },
         });
-
-        console.log(
-          `Updated plan for user ${userId} and product ${productId} to success`
-        );
-        break;
+      } finally {
+        session.endSession();
       }
-
-      // Add other event handlers as needed
-
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
+    } else {
+      console.log(`Unhandled event type: ${event.type}`);
     }
 
     return res.status(httpStatusCode.OK).json({
@@ -462,9 +434,10 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Webhook error:", error);
     const { code, message } = errorParser(error);
-    return res
-      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
-      .json({ success: false, message: message || "An error occurred" });
+    return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: message || "An error occurred",
+    });
   }
 };
 
@@ -527,11 +500,13 @@ export const cancelSubscription = async (req: Request, res: Response) => {
 const getPlanIdFromProductId = async (productId: string) => {
   const pricePlan = await pricePlanModel.findOne({ productId });
   if (!pricePlan) {
-    throw new Error(JSON.stringify({
-      success: false,
-      message: "Price plan not found for the given product ID",
-      code: httpStatusCode.NOT_FOUND
-    }));
+    throw new Error(
+      JSON.stringify({
+        success: false,
+        message: "Price plan not found for the given product ID",
+        code: httpStatusCode.NOT_FOUND,
+      })
+    );
   }
   return pricePlan._id;
 };
@@ -539,5 +514,41 @@ const getPlanIdFromProductId = async (productId: string) => {
 // Helper function to get today's date in UTC
 const getTodayUTC = () => {
   const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
 };
+
+export function getUTCDate(date: Date): Date {
+  // Creates a new UTC date at midnight based on the input date
+  const utcDate = new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    0, 0, 0, 0
+  ));
+  return utcDate;
+}
+
+export function addUTCInterval(date: Date, interval: string, count: number): Date {
+  // Adds a time interval (day, week, month, year) to a UTC date
+  const result = new Date(date);
+  switch (interval) {
+    case "day":
+      result.setUTCDate(result.getUTCDate() + count);
+      break;
+    case "week":
+      result.setUTCDate(result.getUTCDate() + count * 7);
+      break;
+    case "month":
+      result.setUTCMonth(result.getUTCMonth() + count);
+      break;
+    case "year":
+      result.setUTCFullYear(result.getUTCFullYear() + count);
+      break;
+    default:
+      // Default to 30 days for one-time payments
+      result.setUTCDate(result.getUTCDate() + 30);
+  }
+  return result;
+}

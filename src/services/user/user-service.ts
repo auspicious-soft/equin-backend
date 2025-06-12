@@ -405,165 +405,153 @@ export const myPlanService = async (req: Request, res: Response) => {
   let mealTracking = null;
   let mealPlan = null;
 
-  try {
-    const activePlan = await userPlanModel
-      .findOne({
-        userId: userData.id,
-        startDate: { $lt: tomorrow },
-        endDate: { $gte: today },
-        paymentStatus: "success",
-      })
-      .populate("planId")
-      .lean();
+  const activePlan = await userPlanModel
+    .findOne({
+      userId: userData.id,
+      startDate: { $lt: tomorrow },
+      endDate: { $gte: today },
+      paymentStatus: "success",
+    })
+    .populate("planId")
+    .lean();
 
-    const essentialTips = await essentialTipModel
-      .find({
-        isActive: true,
-        publishDate: { $lte: today },
-      })
-      .sort({ publishDate: -1 })
-      .limit(5);
+  const essentialTips = await essentialTipModel
+    .find({
+      isActive: true,
+      publishDate: { $lte: today },
+    })
+    .sort({ publishDate: -1 })
+    .limit(5);
 
-    if (activePlan?.planId) {
-      const startDate = getDateMidnightUTC(
-        new Date(activePlan?.startDate ?? today)
-      );
-      const endDate = getDateMidnightUTC(
-        new Date(activePlan?.endDate ?? today)
-      );
+  if (activePlan?.planId) {
+    const startDate = getDateMidnightUTC(
+      new Date(activePlan?.startDate ?? today)
+    );
+    const endDate = getDateMidnightUTC(new Date(activePlan?.endDate ?? today));
 
-      const existingRecords = await trackUserMealModel.find({
-        userId: userData.id,
-        planDay: {
-          $gte: startDate,
-          $lte: endDate,
-        },
-      });
+    const existingRecords = await trackUserMealModel.find({
+      userId: userData.id,
+      planDay: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    });
 
-      const existingRecordsByDate: { [key: string]: any } = {};
-      existingRecords.forEach((record) => {
-        const dateKey = record.planDay.toISOString().split("T")[0];
-        existingRecordsByDate[dateKey] = record;
-      });
+    const existingRecordsByDate: { [key: string]: any } = {};
+    existingRecords.forEach((record) => {
+      const dateKey = record.planDay.toISOString().split("T")[0];
+      existingRecordsByDate[dateKey] = record;
+    });
 
-      const mealPlans = await mealPlanModel30.find({
-        plan_type: userData.gender === "Male" ? "Men" : "Women",
-      });
+    const mealPlans = await mealPlanModel30.find({
+      plan_type: userData.gender === "Male" ? "Men" : "Women",
+    });
 
-      if (mealPlans.length === 0) {
-        console.error(`No meal plans found for gender: ${userData.gender}`);
-      }
+    if (mealPlans.length === 0) {
+      console.error(`No meal plans found for gender: ${userData.gender}`);
+    }
 
-      const totalDays =
-        Math.ceil(
-          (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
-        ) + 1;
+    const totalDays =
+      Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
+      ) + 1;
 
-      const bulkOperations = [];
-      const bulkEntries = [];
+    const bulkOperations = [];
+    const bulkEntries = [];
 
-      for (let i = 0; i < totalDays; i++) {
-        const currentDayDate = new Date(startDate);
-        currentDayDate.setUTCDate(startDate.getUTCDate() + i);
-        currentDayDate.setUTCHours(0, 0, 0, 0);
+    for (let i = 0; i < totalDays; i++) {
+      const currentDayDate = new Date(startDate);
+      currentDayDate.setUTCDate(startDate.getUTCDate() + i);
+      currentDayDate.setUTCHours(0, 0, 0, 0);
 
-        const dateKey = currentDayDate.toISOString().split("T")[0];
-        const dayIndex = i % 30;
-        const planForDay = mealPlans.find((plan) => plan.day === dayIndex + 1);
+      const dateKey = currentDayDate.toISOString().split("T")[0];
+      const dayIndex = i % 30;
+      const planForDay = mealPlans.find((plan) => plan.day === dayIndex + 1);
 
-        if (planForDay) {
-          const existingRecord = existingRecordsByDate[dateKey];
-          if (existingRecord) {
-            if (
-              !existingRecord.planId ||
-              existingRecord.planId.toString() !== planForDay._id.toString()
-            ) {
-              bulkOperations.push({
-                updateOne: {
-                  filter: { _id: existingRecord._id },
-                  update: { $set: { planId: planForDay._id } },
-                },
-              });
-            }
-          } else {
-            bulkEntries.push({
-              userId: userData.id,
-              planId: planForDay._id,
-              planDay: currentDayDate,
-              firstMealStatus: {
-                carbs: 0,
-                protein: 0,
-                fat: 0,
-                status: false,
-              },
-              secondMealStatus: {
-                carbs: 0,
-                protein: 0,
-                fat: 0,
-                status: false,
-              },
-              thirdMealStatus: {
-                carbs: 0,
-                protein: 0,
-                fat: 0,
-                status: false,
-              },
-              otherMealStatus: {
-                carbs: 0,
-                protein: 0,
-                fat: 0,
-                status: false,
+      if (planForDay) {
+        const existingRecord = existingRecordsByDate[dateKey];
+        if (existingRecord) {
+          if (
+            !existingRecord.planId ||
+            existingRecord.planId.toString() !== planForDay._id.toString()
+          ) {
+            bulkOperations.push({
+              updateOne: {
+                filter: { _id: existingRecord._id },
+                update: { $set: { planId: planForDay._id } },
               },
             });
           }
+        } else {
+          bulkEntries.push({
+            userId: userData.id,
+            planId: planForDay._id,
+            planDay: currentDayDate,
+            firstMealStatus: {
+              carbs: 0,
+              protein: 0,
+              fat: 0,
+              status: false,
+            },
+            secondMealStatus: {
+              carbs: 0,
+              protein: 0,
+              fat: 0,
+              status: false,
+            },
+            thirdMealStatus: {
+              carbs: 0,
+              protein: 0,
+              fat: 0,
+              status: false,
+            },
+            otherMealStatus: {
+              carbs: 0,
+              protein: 0,
+              fat: 0,
+              status: false,
+            },
+          });
         }
       }
-
-      if (bulkOperations.length > 0) {
-        await trackUserMealModel.bulkWrite(bulkOperations);
-      }
-
-      if (bulkEntries.length > 0) {
-        await trackUserMealModel.insertMany(bulkEntries);
-      }
-
-      const sixDaysAhead = new Date(today);
-      sixDaysAhead.setUTCDate(today.getUTCDate() + 6);
-
-      const sevenDayMealTracker = await trackUserMealModel
-        .find({
-          userId: userData.id,
-          planDay: {
-            $gte: today,
-            $lte: sixDaysAhead,
-          },
-        })
-        .sort({ planDay: 1 })
-        .populate("planId");
-
-      mealTracking = sevenDayMealTracker;
-    } else {
-      mealPlan = await pricePlanModel.find();
     }
 
-    return {
-      success: true,
-      message: activePlan?.planId
-        ? "Active plan found"
-        : "No active plan found",
-      data: {
-        hasActivePlan: !!mealTracking,
-        plan: mealTracking || mealPlan,
-        essentialTips,
-      },
-    };
-  } catch (error) {
-    console.error("Error in myPlanService:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong while retrieving the plan.",
-    });
+    if (bulkOperations.length > 0) {
+      await trackUserMealModel.bulkWrite(bulkOperations);
+    }
+
+    if (bulkEntries.length > 0) {
+      await trackUserMealModel.insertMany(bulkEntries);
+    }
+
+    const sixDaysAhead = new Date(today);
+    sixDaysAhead.setUTCDate(today.getUTCDate() + 6);
+
+    const sevenDayMealTracker = await trackUserMealModel
+      .find({
+        userId: userData.id,
+        planDay: {
+          $gte: today,
+          $lte: sixDaysAhead,
+        },
+      })
+      .sort({ planDay: 1 })
+      .populate("planId");
+
+    mealTracking = sevenDayMealTracker;
+  } else {
+    mealPlan = await pricePlanModel.find();
   }
+
+  return {
+    success: true,
+    message: activePlan?.planId ? "Active plan found" : "No active plan found",
+    data: {
+      hasActivePlan: !!mealTracking,
+      plan: mealTracking || mealPlan,
+      essentialTips,
+    },
+  };
 };
 
 export const savePricePlanServices = async (req: Request, res: Response) => {

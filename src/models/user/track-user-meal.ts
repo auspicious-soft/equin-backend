@@ -119,6 +119,8 @@ const trackUserMealSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+trackUserMealSchema.index({ userId: 1, planDay: 1 }, { unique: true });
+
 export const trackUserMealModel = mongoose.model<TrackUserMealDocument>(
   "trackUserMeal",
   trackUserMealSchema
