@@ -78,3 +78,12 @@ export const debugDateComparison = (
     console.log(`[DATE DEBUG] Is current <= end? ${currentDate <= endDate}`);
   }
 };
+
+export function getUTCDate(date: Date): Date {
+  return new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    0, 0, 0, 0
+  ));
+}

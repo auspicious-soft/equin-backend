@@ -32,8 +32,10 @@ import {
   getTomorrowUTC,
   getDateMidnightUTC,
   debugDateComparison,
+  getUTCDate,
 } from "src/utils/date-utils";
 import { termConditionModel } from "src/models/admin/term-condition-model";
+import mongoose from "mongoose";
 
 configDotenv();
 
@@ -396,162 +398,386 @@ export const waterTracketService = async (req: Request, res: Response) => {
 
 //*************My Plan Page APIS
 
+// export const myPlanService = async (req: Request, res: Response) => {
+//   const userData = req.user as { id: string; gender: string };
+
+//   const today = getTodayUTC();
+//   const tomorrow = getTomorrowUTC();
+
+//   let mealTracking = null;
+//   let mealPlan = null;
+
+//   const activePlan = await userPlanModel
+//     .findOne({
+//       userId: userData.id,
+//       startDate: { $lt: tomorrow },
+//       endDate: { $gte: today },
+//       paymentStatus: "success",
+//     })
+//     .populate("planId")
+//     .lean();
+
+//   const essentialTips = await essentialTipModel
+//     .find({
+//       isActive: true,
+//       publishDate: { $lte: today },
+//     })
+//     .sort({ publishDate: -1 })
+//     .limit(5);
+
+//   if (activePlan?.planId) {
+//     const startDate = getDateMidnightUTC(
+//       new Date(activePlan?.startDate ?? today)
+//     );
+//     const endDate = getDateMidnightUTC(new Date(activePlan?.endDate ?? today));
+
+//     const existingRecords = await trackUserMealModel.find({
+//       userId: userData.id,
+//       planDay: {
+//         $gte: startDate,
+//         $lte: endDate,
+//       },
+//     });
+
+//     const existingRecordsByDate: { [key: string]: any } = {};
+//     existingRecords.forEach((record) => {
+//       const dateKey = record.planDay.toISOString().split("T")[0];
+//       existingRecordsByDate[dateKey] = record;
+//     });
+
+//     const mealPlans = await mealPlanModel30.find({
+//       plan_type: userData.gender === "Male" ? "Men" : "Women",
+//     });
+
+//     if (mealPlans.length === 0) {
+//       console.error(`No meal plans found for gender: ${userData.gender}`);
+//     }
+
+//     const totalDays =
+//       Math.ceil(
+//         (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
+//       ) + 1;
+
+//     const bulkOperations = [];
+//     const bulkEntries = [];
+
+//     for (let i = 0; i < totalDays; i++) {
+//       const currentDayDate = new Date(startDate);
+//       currentDayDate.setUTCDate(startDate.getUTCDate() + i);
+//       currentDayDate.setUTCHours(0, 0, 0, 0);
+
+//       const dateKey = currentDayDate.toISOString().split("T")[0];
+//       const dayIndex = i % 30;
+//       const planForDay = mealPlans.find((plan) => plan.day === dayIndex + 1);
+
+//       if (planForDay) {
+//         const existingRecord = existingRecordsByDate[dateKey];
+//         if (existingRecord) {
+//           if (
+//             !existingRecord.planId ||
+//             existingRecord.planId.toString() !== planForDay._id.toString()
+//           ) {
+//             bulkOperations.push({
+//               updateOne: {
+//                 filter: { _id: existingRecord._id },
+//                 update: { $set: { planId: planForDay._id } },
+//               },
+//             });
+//           }
+//         } else {
+//           bulkEntries.push({
+//             userId: userData.id,
+//             planId: planForDay._id,
+//             planDay: currentDayDate,
+//             firstMealStatus: {
+//               carbs: 0,
+//               protein: 0,
+//               fat: 0,
+//               status: false,
+//             },
+//             secondMealStatus: {
+//               carbs: 0,
+//               protein: 0,
+//               fat: 0,
+//               status: false,
+//             },
+//             thirdMealStatus: {
+//               carbs: 0,
+//               protein: 0,
+//               fat: 0,
+//               status: false,
+//             },
+//             otherMealStatus: {
+//               carbs: 0,
+//               protein: 0,
+//               fat: 0,
+//               status: false,
+//             },
+//           });
+//         }
+//       }
+//     }
+
+//     // Use a transaction for atomicity
+//     const session = await mongoose.startSession();
+//     try {
+//       session.startTransaction();
+
+//       if (bulkOperations.length > 0) {
+//         await trackUserMealModel.bulkWrite(bulkOperations, { session });
+//       }
+
+//       if (bulkEntries.length > 0) {
+//         // Add ordered: false to continue processing even if some documents fail
+//         await trackUserMealModel.insertMany(bulkEntries, {
+//           session,
+//           ordered: false
+//         });
+//       }
+
+//       await session.commitTransaction();
+//     } catch (error) {
+//       await session.abortTransaction();
+//       console.error('Transaction failed:', error);
+//       // Handle the error appropriately
+//     } finally {
+//       session.endSession();
+//     }
+
+//     const sixDaysAhead = new Date(today);
+//     sixDaysAhead.setUTCDate(today.getUTCDate() + 6);
+
+//     const sevenDayMealTracker = await trackUserMealModel
+//       .find({
+//         userId: userData.id,
+//         planDay: {
+//           $gte: today,
+//           $lte: sixDaysAhead,
+//         },
+//       })
+//       .sort({ planDay: 1 })
+//       .populate("planId");
+
+//     mealTracking = sevenDayMealTracker;
+//   } else {
+//     mealPlan = await pricePlanModel.find();
+//   }
+
+//   return {
+//     success: true,
+//     message: activePlan?.planId ? "Active plan found" : "No active plan found",
+//     data: {
+//       hasActivePlan: !!mealTracking,
+//       plan: mealTracking || mealPlan,
+//       essentialTips,
+//     },
+//   };
+// };
+
+interface UserData {
+  id: string;
+  gender: string;
+}
+
+interface LockDocument extends mongoose.Document {
+  userId: string;
+  lockedAt: Date;
+}
+
+const lockSchema = new mongoose.Schema({
+  userId: { type: String, unique: true },
+  lockedAt: { type: Date, default: Date.now, expires: 60 }, // Auto-expire after 60s
+});
+
+const LockModel = mongoose.model<LockDocument>("Lock", lockSchema);
+
+async function acquireLock(userId: string): Promise<boolean> {
+  try {
+    await LockModel.create({ userId });
+    return true;
+  } catch (error: any) {
+    if (error.code === 11000) return false; // Duplicate key
+    throw error;
+  }
+}
+async function releaseLock(userId: string) {
+  await LockModel.deleteOne({ userId });
+}
 export const myPlanService = async (req: Request, res: Response) => {
-  const userData = req.user as { id: string; gender: string };
+  const userData = req.user as UserData;
+  console.log(`myPlanService called for user ${userData.id}`);
 
-  const today = getTodayUTC();
-  const tomorrow = getTomorrowUTC();
-
-  let mealTracking = null;
-  let mealPlan = null;
-
-  const activePlan = await userPlanModel
-    .findOne({
-      userId: userData.id,
-      startDate: { $lt: tomorrow },
-      endDate: { $gte: today },
-      paymentStatus: "success",
-    })
-    .populate("planId")
-    .lean();
-
-  const essentialTips = await essentialTipModel
-    .find({
-      isActive: true,
-      publishDate: { $lte: today },
-    })
-    .sort({ publishDate: -1 })
-    .limit(5);
-
-  if (activePlan?.planId) {
-    const startDate = getDateMidnightUTC(
-      new Date(activePlan?.startDate ?? today)
-    );
-    const endDate = getDateMidnightUTC(new Date(activePlan?.endDate ?? today));
-
-    const existingRecords = await trackUserMealModel.find({
-      userId: userData.id,
-      planDay: {
-        $gte: startDate,
-        $lte: endDate,
-      },
-    });
-
-    const existingRecordsByDate: { [key: string]: any } = {};
-    existingRecords.forEach((record) => {
-      const dateKey = record.planDay.toISOString().split("T")[0];
-      existingRecordsByDate[dateKey] = record;
-    });
-
-    const mealPlans = await mealPlanModel30.find({
-      plan_type: userData.gender === "Male" ? "Men" : "Women",
-    });
-
-    if (mealPlans.length === 0) {
-      console.error(`No meal plans found for gender: ${userData.gender}`);
-    }
-
-    const totalDays =
-      Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
-      ) + 1;
-
-    const bulkOperations = [];
-    const bulkEntries = [];
-
-    for (let i = 0; i < totalDays; i++) {
-      const currentDayDate = new Date(startDate);
-      currentDayDate.setUTCDate(startDate.getUTCDate() + i);
-      currentDayDate.setUTCHours(0, 0, 0, 0);
-
-      const dateKey = currentDayDate.toISOString().split("T")[0];
-      const dayIndex = i % 30;
-      const planForDay = mealPlans.find((plan) => plan.day === dayIndex + 1);
-
-      if (planForDay) {
-        const existingRecord = existingRecordsByDate[dateKey];
-        if (existingRecord) {
-          if (
-            !existingRecord.planId ||
-            existingRecord.planId.toString() !== planForDay._id.toString()
-          ) {
-            bulkOperations.push({
-              updateOne: {
-                filter: { _id: existingRecord._id },
-                update: { $set: { planId: planForDay._id } },
-              },
-            });
-          }
-        } else {
-          bulkEntries.push({
-            userId: userData.id,
-            planId: planForDay._id,
-            planDay: currentDayDate,
-            firstMealStatus: {
-              carbs: 0,
-              protein: 0,
-              fat: 0,
-              status: false,
-            },
-            secondMealStatus: {
-              carbs: 0,
-              protein: 0,
-              fat: 0,
-              status: false,
-            },
-            thirdMealStatus: {
-              carbs: 0,
-              protein: 0,
-              fat: 0,
-              status: false,
-            },
-            otherMealStatus: {
-              carbs: 0,
-              protein: 0,
-              fat: 0,
-              status: false,
-            },
-          });
-        }
-      }
-    }
-
-    if (bulkOperations.length > 0) {
-      await trackUserMealModel.bulkWrite(bulkOperations);
-    }
-
-    if (bulkEntries.length > 0) {
-      await trackUserMealModel.insertMany(bulkEntries);
-    }
-
-    const sixDaysAhead = new Date(today);
-    sixDaysAhead.setUTCDate(today.getUTCDate() + 6);
-
-    const sevenDayMealTracker = await trackUserMealModel
-      .find({
-        userId: userData.id,
-        planDay: {
-          $gte: today,
-          $lte: sixDaysAhead,
-        },
-      })
-      .sort({ planDay: 1 })
-      .populate("planId");
-
-    mealTracking = sevenDayMealTracker;
-  } else {
-    mealPlan = await pricePlanModel.find();
+  const lockAcquired = await acquireLock(userData.id);
+  if (!lockAcquired) {
+    return {
+      success: false,
+      message: "Request in progress, please try again later",
+      status: 409,
+    };
   }
 
-  return {
-    success: true,
-    message: activePlan?.planId ? "Active plan found" : "No active plan found",
-    data: {
-      hasActivePlan: !!mealTracking,
-      plan: mealTracking || mealPlan,
-      essentialTips,
-    },
-  };
+  try {
+    const today = getTodayUTC();
+    const tomorrow = getTomorrowUTC();
+    let mealTracking = null;
+    let mealPlan = null;
+
+    const activePlan = await userPlanModel
+      .findOne({
+        userId: userData.id,
+        startDate: { $lt: tomorrow },
+        endDate: { $gte: today },
+        paymentStatus: "success",
+      })
+      .populate("planId")
+      .lean();
+
+    const essentialTips = await essentialTipModel
+      .find({
+        isActive: true,
+        publishDate: { $lte: today },
+      })
+      .sort({ publishDate: -1 })
+      .limit(5);
+
+    if (activePlan?.planId) {
+      const startDate = getUTCDate(new Date(activePlan.startDate ?? today));
+      const endDate = getUTCDate(new Date(activePlan.endDate ?? today));
+
+      const existingRecords = await trackUserMealModel.find({
+        userId: userData.id,
+        planDay: { $gte: startDate, $lte: endDate },
+      });
+
+      const existingRecordsByDate: { [key: string]: any } = {};
+      existingRecords.forEach((record) => {
+        const dateKey = record.planDay.toISOString().split("T")[0];
+        existingRecordsByDate[dateKey] = record;
+      });
+
+      const mealPlans = await mealPlanModel30.find({
+        plan_type: userData.gender === "Male" ? "Men" : "Women",
+      });
+
+      if (mealPlans.length === 0) {
+        console.error(`No meal plans found for gender: ${userData.gender}`);
+      }
+
+      const totalDays =
+        Math.ceil(
+          (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
+        ) + 1;
+
+      const bulkOperations = [];
+      const bulkEntries = [];
+
+      for (let i = 0; i < totalDays; i++) {
+        const currentDayDate = new Date(startDate);
+        currentDayDate.setUTCDate(startDate.getUTCDate() + i);
+        currentDayDate.setUTCHours(0, 0, 0, 0);
+
+        const dateKey = currentDayDate.toISOString().split("T")[0];
+        const dayIndex = i % 30;
+        const planForDay = mealPlans.find((plan) => plan.day === dayIndex + 1);
+
+        if (planForDay) {
+          const existingRecord = existingRecordsByDate[dateKey];
+          if (existingRecord) {
+            if (
+              !existingRecord.planId ||
+              existingRecord.planId.toString() !== planForDay._id.toString()
+            ) {
+              console.log(
+                `Updating planId for user ${userData.id}, planDay ${dateKey}`
+              );
+              bulkOperations.push({
+                updateOne: {
+                  filter: { _id: existingRecord._id },
+                  update: { $set: { planId: planForDay._id } },
+                },
+              });
+            } else {
+              console.warn(
+                `Duplicate entry detected for user ${userData.id}, planDay ${dateKey}`
+              );
+            }
+          } else {
+            bulkEntries.push({
+              userId: userData.id,
+              planId: planForDay._id,
+              planDay: currentDayDate,
+              firstMealStatus: { carbs: 0, protein: 0, fat: 0, status: false },
+              secondMealStatus: { carbs: 0, protein: 0, fat: 0, status: false },
+              thirdMealStatus: { carbs: 0, protein: 0, fat: 0, status: false },
+              otherMealStatus: { carbs: 0, protein: 0, fat: 0, status: false },
+            });
+          }
+        }
+      }
+
+      const session = await mongoose.startSession();
+      try {
+        session.startTransaction();
+
+        if (bulkOperations.length > 0) {
+          await trackUserMealModel.bulkWrite(bulkOperations, { session });
+        }
+
+        if (bulkEntries.length > 0) {
+          try {
+            await trackUserMealModel.insertMany(bulkEntries, {
+              session,
+              ordered: false,
+            });
+          } catch (insertError: any) {
+            if (insertError.code !== 11000) throw insertError;
+            console.warn(`Skipped duplicate entries for user ${userData.id}`);
+          }
+        }
+
+        await session.commitTransaction();
+      } catch (error: any) {
+        await session.abortTransaction();
+        console.error("Transaction failed:", error);
+        return {
+          success: false,
+          message: "Failed to update meal tracking",
+          status: httpStatusCode.INTERNAL_SERVER_ERROR,
+        };
+      } finally {
+        session.endSession();
+      }
+
+      const sixDaysAhead = new Date(today);
+      sixDaysAhead.setUTCDate(today.getUTCDate() + 6);
+
+      const sevenDayMealTracker = await trackUserMealModel
+        .find({
+          userId: userData.id,
+          planDay: { $gte: today, $lte: sixDaysAhead },
+        })
+        .sort({ planDay: 1 })
+        .populate("planId");
+
+      mealTracking = sevenDayMealTracker;
+    } else {
+      mealPlan = await pricePlanModel.find();
+    }
+
+    return {
+      success: true,
+      message: activePlan?.planId
+        ? "Active plan found"
+        : "No active plan found",
+      data: {
+        hasActivePlan: !!mealTracking,
+        plan: mealTracking || mealPlan,
+        essentialTips,
+      },
+    };
+  } finally {
+    await releaseLock(userData.id);
+  }
 };
 
 export const savePricePlanServices = async (req: Request, res: Response) => {
