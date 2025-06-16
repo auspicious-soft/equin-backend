@@ -1045,10 +1045,12 @@ export const nutritionServices = async (req: Request, res: Response) => {
   let targetProtein = 0;
   let targetFat = 0;
 
+  let totalCalories = 0;
+
   // Extract target nutrients from meal plan if available
   if (todayMeal?.planId && (todayMeal.planId as any).meals) {
     const totalCaloriesStr = (todayMeal.planId as any).total_calories || "0";
-    const totalCalories = parseInt(totalCaloriesStr.replace(/\D/g, "")) || 0;
+    totalCalories = parseInt(totalCaloriesStr.replace(/\D/g, "")) || 0;
 
     if (totalCalories > 0) {
       targetCarbs = Math.round((totalCalories * 0.5) / 4); // 50% of calories from carbs
@@ -1089,6 +1091,12 @@ export const nutritionServices = async (req: Request, res: Response) => {
     overall: {
       percentage: overallPercentage,
     },
+    remainingCal:
+      Number(totalCalories) -
+      (Number(firstMealCalories) +
+        Number(secondMealCalories) +
+        Number(thirdMealCalories) +
+        Number(otherMealCalories)),
   };
 
   return {
