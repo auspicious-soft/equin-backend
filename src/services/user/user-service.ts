@@ -882,9 +882,9 @@ export const nutritionServices = async (req: Request, res: Response) => {
     .populate("planId")
     .lean();
 
-  // Step 2: If no existing meal found, create one using findOneAndUpdate with upsert
+  // Step 2: If no existing meal found, create one using findOneAndUpdate with upsert.
   if (!todayMeal) {
-    // Prepare the meal data to upsert
+    // Prepare the meal data to upsert 
     const mealData = {
       userId: userData.id,
       planDay: todayUTC,
