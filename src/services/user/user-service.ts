@@ -883,6 +883,7 @@ export const nutritionServices = async (req: Request, res: Response) => {
     .lean();
 
   // Step 2: If no existing meal found, create one using findOneAndUpdate with upsert.
+  
   if (!todayMeal) {
     // Prepare the meal data to upsert 
     const mealData = { 
